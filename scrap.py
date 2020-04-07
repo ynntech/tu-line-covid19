@@ -42,11 +42,13 @@ class News:
 
 
 class Site:
-    def __init__(self, url, base_url, class_name):
+    def __init__(self, url, base_url, tag, class_name):
         # https://www.eng.tohoku.ac.jp/news/detail-,-id,1561.html#1
         self.url = url
         # https://www.eng.tohoku.ac.jp/
         self.base_url = base_url
+        self.tag = tag
+        self.class_name = class_name
 
     def get(self):
         response = requests.get(self.url)
@@ -55,7 +57,9 @@ class Site:
         soup = BeautifulSoup(response.text, "lxml")
 
         # 以降、サイトに合わせて書き直す必要あり
-        boxes = soup.find_all("ul", class_=class_name)
+        boxes = soup.find_all(self.tag, class_=self.class_name)
+        # ===============================
+        # ここから、各学科ごとにメソッドでわける。
         # 「4月入学者のみなさまへ」はindex 1
         box = boxes[1]
         info_list = box.find_all("li")
@@ -65,5 +69,5 @@ class Site:
 
 if __name__ == "__main__":
     eng = Site("https://www.eng.tohoku.ac.jp/news/detail-,-id,1561.html#1",
-               "https://www.eng.tohoku.ac.jp", "none")
+               "https://www.eng.tohoku.ac.jp", "ul", "none",)
     eng.get()
