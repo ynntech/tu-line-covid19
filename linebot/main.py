@@ -82,7 +82,6 @@ def handle_follow(event):
 # Postbackを受け取る
 @handler.add(PostbackEvent)
 def handle_postback(event):
-
     # 学部を選択した後、学科を選択してもらう
     if event.postback.data[-1] == "部": 
         department = event.postback.data
@@ -106,7 +105,7 @@ def handle_postback(event):
         userid_df = pd.read_csv("userid.csv",  encoding="cp932")
         newid = pd.Series([department, subject, userid], index=["department", "subject", "user_id"])
         userid_df = userid_df.append(newid, ignore_index=True)
-        userid_df.to_csv('userid.csv', encoding='cp932')
+        userid_df.to_csv("userid.csv", encoding="cp932", index=False)
 
 
 if __name__ ==  "__main__":

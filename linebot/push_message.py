@@ -15,7 +15,7 @@ def push_message(message, major):
     ==Return==
         None
     """
-    userid_df = pd.read_csv('user_id.csv', encoding='cp932')
+    userid_df = pd.read_csv("userid.csv", encoding="cp932")
     target_ids = userid_df.loc[userid_df["department"]==major]["user_id"] #対象学部のuseridのリストを取得
 
     for userid in target_ids:
@@ -26,4 +26,4 @@ def push_message(message, major):
 
 
 if __name__ == "__main__":
-    push_message(["userid"], "TEST")
+    push_message("更新されました\nhttps://www.eng.tohoku.ac.jp/news/detail-,-id,1561.html", "工学部")
