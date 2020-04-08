@@ -1,4 +1,6 @@
+#-*- coding: utf-8 -*-
 import os
+import sys
 import time
 import pickle
 import requests
@@ -6,6 +8,10 @@ import datetime
 import schedule
 from bs4 import BeautifulSoup
 from collections import defaultdict
+
+sys.path.append(os.path.abspath("../linebot"))
+
+from push_message import push_message
 
 
 class News:
@@ -28,6 +34,7 @@ class News:
 class Site:
     path = ""
     url = ""
+    major = ""
 
     def __init__(self):
         self.data = self.read()
@@ -105,42 +112,6 @@ class Site:
         return self.data
 
 
-class BMENews(News):
-    def __init__(self, tag):
-        '''
-        <parameter>
-        tag (bs4.element.Tag) : single topic object
-        '''
-        self.tag = tag
-        self.summary()
-
-    ## this should be overrided
-    ## because the format of news will be different from the others
-    def summary(self):
-        time = self.tag.find(class_="day").text.split()[0]
-        content = self.tag.find_all(class_="detail")
-        contents = []
-        links = []
-        for i in range(len(content)):
-            href = content[i].find("a").get("href")
-            links.append(href)
-            contents.append(content[i].text)
-        self.time = time
-        self.content = " ".join(contents) + "\n" + "\n".join(links)
-
-
-class BME(Site):
-    path = "./sample_bme.pickle"
-    url = "http://www.bme.tohoku.ac.jp/information/news/"
-
-    def get(self):
-        soup = self.request()
-        ## 以降、サイトに合わせて書き直す必要あり
-        info_list = soup.find("div", class_="list-news").find_all("li")
-        info_list = [BMENews(info) for info in info_list]
-        return self.dic(info_list)
-
-
 class Superviser:
     def __init__(self, targets=[], timers=[]):
         self._targets = targets
@@ -152,7 +123,13 @@ class Superviser:
         now = datetime.datetime.now(datetime.timezone(datetime.timedelta(hours=9)))
         print(f"呼び出し時刻: {now.strftime('%Y/%m/%d %H:%M')}")
         for obj in self._targets:
-            print(obj.new)
+            if obj.new is not None:
+                contents = ["新規情報があります"]
+                for k, v in obj.new.items():
+                    contents.append(f"{k}\n{v}")
+                message = "\n".join(contents)
+                ## line api, push message
+                push_message(message=message, major=obj.major)
 
     def run(self):
         while True:
