@@ -67,6 +67,6 @@ class Site:
 
 
 if __name__ == "__main__":
-    eng = Site("https://www.eng.tohoku.ac.jp/news/detail-,-id,1561.html#1",
-               "https://www.eng.tohoku.ac.jp", "ul", "none",)
-    eng.get()
+    pharm = Site("http://www.pharm.tohoku.ac.jp/info/200331/200331.shtml",
+                 "http://www.pharm.tohoku.ac.jp", "div", "contents_wrap_box")
+    pharm.get()

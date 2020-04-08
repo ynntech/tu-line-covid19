@@ -67,6 +67,6 @@ class Site:
 
 
 if __name__ == "__main__":
-    eng = Site("https://www.eng.tohoku.ac.jp/news/detail-,-id,1561.html#1",
-               "https://www.eng.tohoku.ac.jp", "ul", "none",)
-    eng.get()
+    dent = Site("http://www.dent.tohoku.ac.jp/important/202003.html",
+                "http://www.dent.tohoku.ac.jp/", "ul", "important_contents")
+    dent.get()
