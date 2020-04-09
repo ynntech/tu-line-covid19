@@ -26,4 +26,4 @@ def push_message(message, major):
 
 
 if __name__ == "__main__":
-    push_message("更新されました\nhttps://www.eng.tohoku.ac.jp/news/detail-,-id,1561.html", "工学部")
+    push_message("更新されました\nhttps://www.eng.tohoku.ac.jp/news/detail-,-id,1561.html", "理学部")

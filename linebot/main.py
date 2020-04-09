@@ -37,7 +37,7 @@ handler = WebhookHandler(LINE_CHANNEL_SECRET)
 major_dic = {"文学部":["人文社会学科"], "教育学部":["教育科学科"], "法学部":["法学科"], "経済学部":["経済学科", "経営学科"]\
         , "理学部":["数学科","物理学科","宇宙地球物理学科","化学科","地圏環境科学科","地球惑星物質科学科","生物学科"]\
         , "医学部":["医学科","保健学科"], "歯学部":["歯学科"], "薬学部":["薬学科","創薬科学科"]\
-        , "工学部":["機械知能・航空工学科","電気情報物理工学科","電気情報物理工学科","電気情報物理工学科","電気情報物理工学科"]\
+        , "工学部":["機械知能・航空工学科","電気情報物理工学科","化学・バイオ工学科","材料化学総合学科","建築・社会工学科"]\
         , "農学部":["生物生産科学科","応用生物化学科"]}
 
 @app.route("/callback", methods=['POST'])
@@ -96,8 +96,6 @@ def handle_postback(event):
     # 学科が選択された後、所属とuseridをcsvに追記
     elif event.postback.data[-1] == "科": 
         user_major = event.postback.data
-        line_bot_api.reply_message(event.reply_token,TextSendMessage(text=user_major +"で登録しました."))
-        
         department = user_major.split(" ")[0]
         subject = user_major.split(" ")[1]
         userid = event.source.user_id
@@ -106,6 +104,8 @@ def handle_postback(event):
         newid = pd.Series([department, subject, userid], index=["department", "subject", "user_id"])
         userid_df = userid_df.append(newid, ignore_index=True)
         userid_df.to_csv("userid.csv", encoding="cp932", index=False)
+
+        line_bot_api.reply_message(event.reply_token,TextSendMessage(text=user_major +"で登録しました."))
 
 
 if __name__ ==  "__main__":
