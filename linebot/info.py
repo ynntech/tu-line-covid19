@@ -13,7 +13,7 @@ info.at_first("工学部")
 '''
 
 class Info:
-    major_index = {"全体":"tu.pickle",
+    major_index = {"全学生向け":"tu.pickle",
                 "文学部":"sal.pickle", "文学研究科":"sal.pickle",
                 "教育学部":"sed.pickle", "教育学研究科":"sed.pickle",
                 "法学部":"law.pickle", "法学研究科":"law.pickle",
@@ -34,11 +34,11 @@ class Info:
     def now(self, major):
         data = self.read(path=self.major_index[major])
         if data is None:
-            return f"=====\n{major}に登録された情報はありません。"
+            return f"{'='*15}\n{major}に登録された情報はありません。"
         else:
-            contents = ["="*5, f"{major}に現在登録されている情報は{len(data)}件です。"]
-            for k, v in data.items():
-                contents.append(f"{k}\n{v}")
+            contents = ["="*15, f"{major}に現在登録されている情報は{len(data)}件です。"]
+            for v in data.values():
+                contents.append(v)
             return "\n".join(contents)
 
     def read(self, path):
@@ -54,7 +54,7 @@ class Info:
             return None
 
     def at_first(self, major):
-        contents = ["現時点で登録されている情報です。", self.now("全体"),
+        contents = ["現時点で登録されている情報です。", self.now("全学生向け"),
                     "東北大学オンライン授業ガイド\nhttps://sites.google.com/view/teleclass-tohoku/forstudents",
                     self.now(major)]
         return "\n".join(contents)
