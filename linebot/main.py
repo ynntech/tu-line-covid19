@@ -73,7 +73,7 @@ def handle_message(event):
     text = event.message.text
     userid = event.source.user_id
     userid_df = pd.read_csv("userid.csv", encoding="cp932")
-    target_department = userid_df.loc[userid_df["userid"]==userid]["department"][0]
+    target_department = userid_df.loc[userid_df["userid"]==userid]["department"].values[0]
     if text == "最新情報":
         line_bot_api.reply_message(event.reply_token,[TextSendMessage(text=info.at_first(target_department))])
 
