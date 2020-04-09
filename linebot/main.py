@@ -25,8 +25,10 @@ from linebot.models import (
     SeparatorComponent, QuickReply, QuickReplyButton
 )
 import pandas as pd
+from info import Info
 
 app = Flask(__name__)
+info = Info()
 
 LINE_CHANNEL_ACCESS_TOKEN = os.environ["LINE_CHANNEL_ACCESS_TOKEN"]
 LINE_CHANNEL_SECRET = os.environ["LINE_CHANNEL_SECRET"]
@@ -34,11 +36,13 @@ line_bot_api = LineBotApi(LINE_CHANNEL_ACCESS_TOKEN)
 handler = WebhookHandler(LINE_CHANNEL_SECRET)
 
 #QuickReplyで表示する選択肢たち
-major_dic = {"文学部":["人文社会学科"], "教育学部":["教育科学科"], "法学部":["法学科"], "経済学部":["経済学科", "経営学科"]\
-        , "理学部":["数学科","物理学科","宇宙地球物理学科","化学科","地圏環境科学科","地球惑星物質科学科","生物学科"]\
-        , "医学部":["医学科","保健学科"], "歯学部":["歯学科"], "薬学部":["薬学科","創薬科学科"]\
-        , "工学部":["機械知能・航空工学科","電気情報物理工学科","化学・バイオ工学科","材料化学総合学科","建築・社会工学科"]\
-        , "農学部":["生物生産科学科","応用生物化学科"]}
+major_dic = {"文学部":["人文社会学科"], "教育学部":["教育科学科"], "法学部":["法学科"], "経済学部":["経済学科", "経営学科"],\
+            "理学部":["数学科","物理学科","宇宙地球物理学科","化学科","地圏環境科学科","地球惑星物質科学科","生物学科"],\
+            "医学部":["医学科","保健学科"], "歯学部":["歯学科"], "薬学部":["薬学科","創薬科学科"],\
+            "工学部":["機械知能・航空工学科","電気情報物理工学科","化学・バイオ工学科","材料化学総合学科","建築・社会工学科"],\
+            "農学部":["生物生産科学科","応用生物化学科"], "文学研究科":None, "教育学研究科":None, "法学研究科":None,\
+            "経済学研究科":None, "理学研究科":None, "医学系研究科":None, "歯学研究科":None, "薬学研究科":None, "工学研究科":None,\
+            "農学研究科":None, "国際文化研究科":None, "情報科学研究科":None, "生命化学研究科":None, "環境科学研究科":None, "医工学研究科":None}
 
 @app.route("/callback", methods=['POST'])
 def callback():
@@ -71,19 +75,30 @@ def handle_message(event):
 # 友だち登録（またはブロック解除）されたときにユーザに学部を選択させる
 @handler.add(FollowEvent)
 def handle_follow(event):
+    items = [QuickReplyButton(action=PostbackAction(label=department, data=department)) for department in list(major_dic.keys())[:12]]
+    items.append(QuickReplyButton(action=PostbackAction(label="さらに表示する", data="さらに表示する")))
     line_bot_api.reply_message(
             event.reply_token,
             TextSendMessage(
-                text='友達登録ありがとうございます.\n下のボタンから学部を選択してください.',
+                text='友達登録ありがとうございます.\n下のボタンから学部,研究科を選択してください.',
                 quick_reply=QuickReply(
-                    items=[QuickReplyButton(action=PostbackAction(label=department, data=department)) for department in major_dic.keys()]
+                    items=items
                 ))) # QuickReplyというリッチメッセージが起動してPostbackEventを発生させる
 
 # Postbackを受け取る
 @handler.add(PostbackEvent)
 def handle_postback(event):
-    # 学部を選択した後、学科を選択してもらう
-    if event.postback.data[-1] == "部": 
+    if event.postback.data == "さらに表示する":  # 『さらに表示する』が押されたら残りの所属を表示する
+        line_bot_api.reply_message(
+            event.reply_token,
+            TextSendMessage(
+                text='下のボタンから研究科を選択してください.',
+                quick_reply=QuickReply(
+                    items=[QuickReplyButton(action=PostbackAction(label=department, data=department)) for department in list(major_dic.keys())[12:]]
+                )))
+
+    # 学部を選択した場合は、学科を選択してもらう
+    elif event.postback.data[-1] == "部": 
         department = event.postback.data
         line_bot_api.reply_message(
             event.reply_token,
@@ -93,19 +108,28 @@ def handle_postback(event):
                     items=[QuickReplyButton(action=PostbackAction(label=subject, data=department + " " +subject)) for subject in major_dic[department]]
                 )))
 
-    # 学科が選択された後、所属とuseridをcsvに追記
+    # 所属が選択された後、所属とuseridをcsvに追記
     elif event.postback.data[-1] == "科": 
         user_major = event.postback.data
-        department = user_major.split(" ")[0]
-        subject = user_major.split(" ")[1]
         userid = event.source.user_id
 
-        userid_df = pd.read_csv("userid.csv",  encoding="cp932")
-        newid = pd.Series([department, subject, userid], index=["department", "subject", "user_id"])
-        userid_df = userid_df.append(newid, ignore_index=True)
-        userid_df.to_csv("userid.csv", encoding="cp932", index=False)
+        if " " not in user_major: # 研究科を選択したときはsubjectは空
+            department = user_major
+            subject = ""
+        else:                     # 学部を選択したときのみsubjectがある
+            department = user_major.split(" ")[0]
+            subject = user_major.split(" ")[1]
+        
+        newid = pd.DataFrame([department, subject, userid], index=["department", "subject", "user_id"]).T
+        newid.to_csv("userid.csv", encoding="cp932", index=False, mode="a", header=False)
 
-        line_bot_api.reply_message(event.reply_token,TextSendMessage(text=user_major +"で登録しました."))
+        # 登録した所属の最新情報を送信
+        line_bot_api.reply_message(event.reply_token,
+                [TextSendMessage(text=user_major +"で登録しました."), TextSendMessage(text=info.at_first(department))])
+        
+        
+        
+
 
 
 if __name__ ==  "__main__":
