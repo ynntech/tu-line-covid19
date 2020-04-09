@@ -68,6 +68,6 @@ class Site:
 
 
 if __name__ == "__main__":
-    is_ = Site("https://www.is.tohoku.ac.jp/jp/forstudents/detail---id-2986.html",
-               "https://www.is.tohoku.ac.jp/", 'ul', "border")
+    is_ = Site("https://www.agri.tohoku.ac.jp/jp/news/covid-19/",
+               "https://www.agri.tohoku.ac.jp", 'div', "area_news_cont")
     is_.get()
