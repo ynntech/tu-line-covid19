@@ -67,11 +67,15 @@ def callback():
 
     return 'OK'
 
-# ユーザからメッセージが送信されたときにオウム返しする
+# ユーザから『最新情報』と送信されたとき、最新の情報を送信
 @handler.add(MessageEvent, message=TextMessage)
 def handle_message(event):
     text = event.message.text
-    line_bot_api.reply_message(event.reply_token,TextSendMessage(text=text))
+    userid = event.source.user_id
+    userid_df = pd.read_csv("userid.csv", encoding="cp932")
+    target_department = userid_df.loc[userid_df["userid"]==userid]["department"][0]
+    if text == "最新情報":
+        line_bot_api.reply_message(event.reply_token,[TextSendMessage(text=info.at_first(target_department))])
 
 # 友だち登録（またはブロック解除）されたときにユーザに学部を選択させる
 @handler.add(FollowEvent)
@@ -79,7 +83,7 @@ def handle_follow(event):
     line_bot_api.reply_message(
             event.reply_token,
             TextSendMessage(
-                text='友達登録ありがとうございます。\n\n登録した学部・研究科と、全学向けのコロナウイルス関連情報の更新を通知でお知らせします。\n\n下のボタンからまず学部生か院生かを選択し、その後学部または研究科を選択してください。\n\n登録し直す場合は一度このbotをブロックし、その後ブロック解除してください。',
+                text='友達登録ありがとうございます。\n\n登録した学部・研究科と、全学生向けのコロナウイルス関連情報の更新を通知でお知らせします。\n\n下のボタンからまず学部生か院生かを選択し、その後学部または研究科を選択してください。\n\n登録し直す場合は一度このbotをブロックし、その後ブロック解除してください。',
                 quick_reply=QuickReply(
                     items=[QuickReplyButton(action=PostbackAction(label="学部生", data="学部生")),
                             QuickReplyButton(action=PostbackAction(label="院生", data="院生"))]
