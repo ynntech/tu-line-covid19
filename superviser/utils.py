@@ -64,7 +64,7 @@ class Site:
         return data
 
     def update(self):
-        pre = self.read()
+        pre = self.data.copy()
         post = self.get()
         self.data = post
         self.write()
@@ -120,9 +120,10 @@ class Superviser:
     def call(self):
         print("定期実行中")
         for obj in self._targets:
-            if obj.new is not None:
+            result = obj.new
+            if result is not None:
                 contents = ["新規情報があります"]
-                for k, v in obj.new.items():
+                for k, v in result.items():
                     contents.append(f"{k}\n{v}")
                 message = "\n".join(contents)
                 ## line api, push message
