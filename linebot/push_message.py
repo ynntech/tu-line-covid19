@@ -7,16 +7,22 @@ import pandas as pd
 LINE_CHANNEL_ACCESS_TOKEN = os.environ["LINE_CHANNEL_ACCESS_TOKEN"]
 line_bot_api = LineBotApi(LINE_CHANNEL_ACCESS_TOKEN)
 
-def push_message(message, major):
+def push_message(message, user_major, subject):
     """
     ==Parameters==
-        message(str) : ユーザに送りたいメッセージ 
-        major(str)   : メッセージを送りたい学部（後々学科まで細分化するかも）
+        message(str)      : ユーザに送りたいメッセージ 
+        user_major(str)   : メッセージを送りたい学部（後々学科まで細分化するかも）
+        subject(bool)     : Trueのときuser_majorに学科指定
     ==Return==
         None
     """
+    if subject:
+        key_major = "subject"
+    else:
+        key_major = "department"
+
     userid_df = pd.read_csv("userid.csv", encoding="cp932")
-    target_ids = userid_df.loc[userid_df["department"]==major]["user_id"] #対象学部のuseridのリストを取得
+    target_ids = userid_df.loc[userid_df[key_major]==user_major]["user_id"] #対象学部のuseridのリストを取得
 
     for userid in target_ids:
         try:                            #メッセージを送信したい相手のIDを入力
