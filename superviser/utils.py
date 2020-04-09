@@ -120,8 +120,7 @@ class Superviser:
             schedule.every().day.at(timer).do(self.call)
 
     def call(self):
-        now = datetime.datetime.now(datetime.timezone(datetime.timedelta(hours=9)))
-        print(f"呼び出し時刻: {now.strftime('%Y/%m/%d %H:%M')}")
+        print("定期実行中")
         for obj in self._targets:
             if obj.new is not None:
                 contents = ["新規情報があります"]
@@ -129,10 +128,13 @@ class Superviser:
                     contents.append(f"{k}\n{v}")
                 message = "\n".join(contents)
                 ## line api, push message
-                push_message(message=message, major=obj.major)
+                for major in obj.major:
+                    push_message(message=message, major=major)
 
     def run(self):
         while True:
+            now = datetime.datetime.now(datetime.timezone(datetime.timedelta(hours=9)))
+            print(now.strftime('%Y/%m/%d %H:%M:%S'))
             schedule.run_pending()
             time.sleep(60)
 

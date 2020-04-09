@@ -34,9 +34,9 @@ class Info:
     def now(self, major):
         data = self.read(path=self.major_index[major])
         if data is None:
-            return f"=====\n{major}に登録された情報はありません。"
+            return f"=====\n{major}に登録された情報はありません."
         else:
-            contents = ["="*5, f"{major}に現在登録されている情報は{len(data)}件です。"]
+            contents = ["="*5, f"{major}に現在登録されている情報は{len(data)}件です."]
             for k, v in data.items():
                 contents.append(f"{k}\n{v}")
             return "\n".join(contents)
@@ -54,7 +54,7 @@ class Info:
             return None
 
     def at_first(self, major):
-        contents = ["現時点で登録されている情報です。", self.now("全体"),
+        contents = ["現時点で登録されている情報です.", self.now("全体"),
                     "東北大学オンライン授業ガイド\nhttps://sites.google.com/view/teleclass-tohoku/forstudents",
                     self.now(major)]
         return "\n".join(contents)
