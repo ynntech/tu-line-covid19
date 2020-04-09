@@ -25,6 +25,7 @@ from linebot.models import (
     SeparatorComponent, QuickReply, QuickReplyButton
 )
 import pandas as pd
+import numpy as np
 from info import Info
 
 app = Flask(__name__)
@@ -80,7 +81,7 @@ def handle_follow(event):
     line_bot_api.reply_message(
             event.reply_token,
             TextSendMessage(
-                text='友達登録ありがとうございます.\n下のボタンから学部,研究科を選択してください.',
+                text='友達登録ありがとうございます。\n\n登録した学部・研究科と、全学向けのコロナウイルス関連情報の更新を通知でお知らせします。\n\n下のボタンから学部、研究科を選択してください。\n\n登録し直す場合は一度このbotをブロックし、その後ブロック解除してください。',
                 quick_reply=QuickReply(
                     items=items
                 ))) # QuickReplyというリッチメッセージが起動してPostbackEventを発生させる
@@ -92,7 +93,7 @@ def handle_postback(event):
         line_bot_api.reply_message(
             event.reply_token,
             TextSendMessage(
-                text='下のボタンから研究科を選択してください.',
+                text='下のボタンから研究科を選択してください。',
                 quick_reply=QuickReply(
                     items=[QuickReplyButton(action=PostbackAction(label=department, data=department)) for department in list(major_dic.keys())[12:]]
                 )))
@@ -103,7 +104,7 @@ def handle_postback(event):
         line_bot_api.reply_message(
             event.reply_token,
             TextSendMessage(
-                text='下のボタンから学科を選択してください.',
+                text='下のボタンから学科を選択してください。',
                 quick_reply=QuickReply(
                     items=[QuickReplyButton(action=PostbackAction(label=subject, data=department + " " +subject)) for subject in major_dic[department]]
                 )))
@@ -125,11 +126,15 @@ def handle_postback(event):
 
         # 登録した所属の最新情報を送信
         line_bot_api.reply_message(event.reply_token,
-                [TextSendMessage(text=user_major +"で登録しました."), TextSendMessage(text=info.at_first(department))])
+                [TextSendMessage(text=user_major +"で登録しました。"), TextSendMessage(text=info.at_first(department))])
         
-        
-        
-
+# ブロックされたときにuserid辞書からユーザーのidを削除
+@handler.add(UnfollowEvent)
+def handle_unfollow(event):
+    userid = event.source.user_id
+    userid_df = pd.read_csv("userid.csv", encoding="cp932")
+    userid_df.drop(index=userid_df.index[np.where(userid_df["userid"]==userid)], inplace=True)
+    userid_df.to_csv("userid.csv", encoding="cp932", index=False)
 
 
 if __name__ ==  "__main__":
