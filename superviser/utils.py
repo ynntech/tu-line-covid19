@@ -9,7 +9,7 @@ import schedule
 from bs4 import BeautifulSoup
 from collections import defaultdict
 
-sys.path.append(os.path.abspath("../linebot"))
+sys.path.append(os.path.abspath(os.path.join("..", "linebot")))
 
 from push_message import push_message
 
@@ -58,10 +58,8 @@ class Site:
         return soup
 
     def dic(self, info_list=[]):
-        #print("現在の情報")
         data = defaultdict(list)
         for item in info_list:
-            #print(f"時刻: {item.time}\n内容: {item.content}")
             data[item.time] = item.content
         return data
 
