@@ -76,26 +76,45 @@ def handle_message(event):
 # 友だち登録（またはブロック解除）されたときにユーザに学部を選択させる
 @handler.add(FollowEvent)
 def handle_follow(event):
-    items = [QuickReplyButton(action=PostbackAction(label=department, data=department)) for department in list(major_dic.keys())[:12]]
-    items.append(QuickReplyButton(action=PostbackAction(label="さらに表示する", data="さらに表示する")))
     line_bot_api.reply_message(
             event.reply_token,
             TextSendMessage(
-                text='友達登録ありがとうございます。\n\n登録した学部・研究科と、全学向けのコロナウイルス関連情報の更新を通知でお知らせします。\n\n下のボタンから学部、研究科を選択してください。\n\n登録し直す場合は一度このbotをブロックし、その後ブロック解除してください。',
+                text='友達登録ありがとうございます。\n\n登録した学部・研究科と、全学向けのコロナウイルス関連情報の更新を通知でお知らせします。\n\n下のボタンからまず学部生か院生かを選択し、その後学部または研究科を選択してください。\n\n登録し直す場合は一度このbotをブロックし、その後ブロック解除してください。',
                 quick_reply=QuickReply(
-                    items=items
+                    items=[QuickReplyButton(action=PostbackAction(label="学部生", data="学部生")),
+                            QuickReplyButton(action=PostbackAction(label="院生", data="院生"))]
                 ))) # QuickReplyというリッチメッセージが起動してPostbackEventを発生させる
 
 # Postbackを受け取る
 @handler.add(PostbackEvent)
 def handle_postback(event):
-    if event.postback.data == "さらに表示する":  # 『さらに表示する』が押されたら残りの所属を表示する
+    if event.postback.data == "学部生":
+        line_bot_api.reply_message(
+            event.reply_token,
+            TextSendMessage(
+                text='下のボタンから学部を選択してください。',
+                quick_reply=QuickReply(
+                    items=[QuickReplyButton(action=PostbackAction(label=department, data=department)) for department in list(major_dic.keys())[:10]]
+                )))
+                
+    elif event.postback.data == "院生":
+        items = [QuickReplyButton(action=PostbackAction(label=department, data=department)) for department in list(major_dic.keys())[10:17]]
+        items.append(QuickReplyButton(action=PostbackAction(label="さらに表示する", data="さらに表示する")))
+        line_bot_api.reply_message(
+            event.reply_token,
+            TextSendMessage(
+                text="下のボタンから研究科を選択してください",
+                quick_reply=QuickReply(
+                    items=items
+                )))
+
+    elif event.postback.data == "さらに表示する":  # 『さらに表示する』が押されたら残りの所属を表示する
         line_bot_api.reply_message(
             event.reply_token,
             TextSendMessage(
                 text='下のボタンから研究科を選択してください。',
                 quick_reply=QuickReply(
-                    items=[QuickReplyButton(action=PostbackAction(label=department, data=department)) for department in list(major_dic.keys())[12:]]
+                    items=[QuickReplyButton(action=PostbackAction(label=department, data=department)) for department in list(major_dic.keys())[17:]]
                 )))
 
     # 学部を選択した場合は、学科を選択してもらう
