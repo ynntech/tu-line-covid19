@@ -98,29 +98,31 @@ def handle_postback(event):
         line_bot_api.reply_message(
             event.reply_token,
             TextSendMessage(
-                text='下のボタンから学部を選択してください。',
+                text='下のボタをスワイプして学部を選択してください。',
                 quick_reply=QuickReply(
                     items=[QuickReplyButton(action=PostbackAction(label=department, data=department)) for department in list(major_dic.keys())[:10]]
                 )))
                 
-    elif event.postback.data == "院生":
+    elif event.postback.data == "院生" or event.postback.data == "ひとつ前に戻る":
         items = [QuickReplyButton(action=PostbackAction(label=department, data=department)) for department in list(major_dic.keys())[10:17]]
         items.append(QuickReplyButton(action=PostbackAction(label="さらに表示する", data="さらに表示する")))
         line_bot_api.reply_message(
             event.reply_token,
             TextSendMessage(
-                text="下のボタンから研究科を選択してください",
+                text="下のボタンをスワイプして研究科を選択してください",
                 quick_reply=QuickReply(
                     items=items
                 )))
 
     elif event.postback.data == "さらに表示する":  # 『さらに表示する』が押されたら残りの所属を表示する
+        items = [QuickReplyButton(action=PostbackAction(label=department, data=department)) for department in list(major_dic.keys())[17:]]
+        items.append(QuickReplyButton(action=PostbackAction(label="ひとつ前に戻る", data="ひとつ前に戻る")))
         line_bot_api.reply_message(
             event.reply_token,
             TextSendMessage(
-                text='下のボタンから研究科を選択してください。',
+                text='下のボタンをスワイプして研究科を選択してください。',
                 quick_reply=QuickReply(
-                    items=[QuickReplyButton(action=PostbackAction(label=department, data=department)) for department in list(major_dic.keys())[17:]]
+                    items=items
                 )))
 
     # 学部を選択した場合は、学科を選択してもらう
@@ -129,7 +131,7 @@ def handle_postback(event):
         line_bot_api.reply_message(
             event.reply_token,
             TextSendMessage(
-                text='下のボタンから学科を選択してください。',
+                text='下のボタンをスワイプして学科を選択してください。',
                 quick_reply=QuickReply(
                     items=[QuickReplyButton(action=PostbackAction(label=subject, data=department + " " +subject)) for subject in major_dic[department]]
                 )))
