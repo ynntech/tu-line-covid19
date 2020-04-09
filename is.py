@@ -60,7 +60,8 @@ class Site:
         # ===============================
         # ここから、各学科ごとにメソッドでわける。
         # 「4月入学者のみなさまへ」はindex 1
-        box = boxes[1]
+        box = boxes[0]
+        print(box)
         info_list = box.find_all("li")
         for_freshmen = Monitor(info_list, self.base_url)
         for_freshmen.summary()
@@ -68,5 +69,5 @@ class Site:
 
 if __name__ == "__main__":
     is_ = Site("https://www.is.tohoku.ac.jp/jp/forstudents/detail---id-2986.html",
-               "https://www.is.tohoku.ac.jp/", "ul", "boder")
+               "https://www.is.tohoku.ac.jp/", 'ul', "border")
     is_.get()
