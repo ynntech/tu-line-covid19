@@ -16,19 +16,30 @@ def push_message(message, user_major, subject):
     ==Return==
         None
     """
-    if subject:
-        key_major = "subject"
+    if user_major == "全学生向け":
+        userid_df = pd.read_csv("userid.csv", encoding="cp932")
+        target_ids = userid_df["userid"]
+
+        for userid in target_ids:
+            try:                            #メッセージを送信したい相手のIDを入力
+                line_bot_api.push_message(userid, TextSendMessage(text=message))
+            except LineBotApiError as e:
+                print("error!")
+
     else:
-        key_major = "department"
+        if subject:
+            key_major == "subject"
+        else:
+            key_major == "department"
 
-    userid_df = pd.read_csv("userid.csv", encoding="cp932")
-    target_ids = userid_df.loc[userid_df[key_major]==user_major]["user_id"] #対象学部のuseridのリストを取得
+        userid_df = pd.read_csv("userid.csv", encoding="cp932")
+        target_ids = userid_df.loc[userid_df[key_major]==user_major]["user_id"] #対象学部のuseridのリストを取得
 
-    for userid in target_ids:
-        try:                            #メッセージを送信したい相手のIDを入力
-            line_bot_api.push_message(userid, TextSendMessage(text=message))
-        except LineBotApiError as e:
-            print("error!")
+        for userid in target_ids:
+            try:                            #メッセージを送信したい相手のIDを入力
+                line_bot_api.push_message(userid, TextSendMessage(text=message))
+            except LineBotApiError as e:
+                print("error!")
 
 
 if __name__ == "__main__":
