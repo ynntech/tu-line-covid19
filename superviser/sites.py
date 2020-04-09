@@ -32,7 +32,7 @@ class TU(Site):
     path = os.path.join("..", os.path.join("sites_db", "tu.pickle"))
     url = "http://www.tohoku.ac.jp/japanese/disaster/outbreak/01/outbreak0101/"
     base_url = "http://www.tohoku.ac.jp"
-    major = ["全体"]
+    major = ["全学生向け"]
 
     def get(self):
         soup = self.request()
