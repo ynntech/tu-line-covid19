@@ -54,13 +54,15 @@ class Site:
         response = requests.get(self.url)
         response.encoding = response.apparent_encoding
         soup = BeautifulSoup(response.text, "lxml")
-
-        # 以降、サイトに合わせて書き直す必要あり
-        boxes = soup.find_all(self.tag, class_=self.class_name)
+      
+        print(self.tag, self.class_name)
+        boxes = soup.find_all(self.tag, id=self.class_name)
         # ===============================
         # ここから、各学科ごとにメソッドでわける。
         # 「4月入学者のみなさまへ」はindex 1
-        box = boxes[1]
+
+        box = boxes[0]
+        print(box)
         info_list = box.find_all("li")
         for_freshmen = Monitor(info_list, self.base_url)
         for_freshmen.summary()
@@ -68,5 +70,5 @@ class Site:
 
 if __name__ == "__main__":
     sci = Site("https://www.sci.tohoku.ac.jp/news/20200305-10978.html",
-               "https://www.sci.tohoku.ac.jp/", "ul", "localNav")
+               "https://www.sci.tohoku.ac.jp/", 'ul', "localNav")
     sci.get()

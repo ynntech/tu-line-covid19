@@ -60,7 +60,7 @@ class Site:
         # ===============================
         # ここから、各学科ごとにメソッドでわける。
         # 「4月入学者のみなさまへ」はindex 1
-        box = boxes[1]
+        box = boxes[0]
         info_list = box.find_all("li")
         for_freshmen = Monitor(info_list, self.base_url)
         for_freshmen.summary()
