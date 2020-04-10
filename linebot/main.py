@@ -75,10 +75,14 @@ def handle_message(event):
     if text == "最新情報":
         userid = event.source.user_id
         userid_df = pd.read_csv("userid.csv", encoding="cp932")
-        print(userid_df)
         department = userid_df.loc[userid_df["userid"]==userid]["department"].values[0]
-        line_bot_api.reply_message(event.reply_token,[TextSendMessage(text=info.now("全学生向け")),
-                                                    TextSendMessage(text=info.now(department))])
+        
+        information_all = info.now("全学生向け").split("\n&&&\n")
+        information_dep = info.now(department).split("\n&&&\n")
+        TextSendMessages_all = [TextSendMessage(text=info_) for info_ in information_all]
+        TextSendMessages_dep = [TextSendMessage(text=info_) for info_ in information_dep]
+        TextSendMessages_all.extend(TextSendMessages_dep) 
+        line_bot_api.reply_message(event.reply_token, TextSendMessages_all)
     else:
         line_bot_api.reply_message(event.reply_token,[TextSendMessage(text=text)])
 
