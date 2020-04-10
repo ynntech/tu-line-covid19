@@ -438,16 +438,26 @@ class EngNews(News):
     ## this should be overrided
     ## because the format of news will be different from the others
     def summary(self):
-        self.time = self.tag.find("p").text.split(" | ")[-1]
-        a_tags = self.tag.find_all("a")
-        contents = "".join(self.tag.text.split(" | " + self.time))
-        links = []
-        for i in range(len(a_tags)):
-            href = a_tags[i].get("href")
+        time_tag = self.tag.find_next("td")
+        time_split = time_tag.text.split(".")
+        time = "{}.{}".format(time_split[0], re.search(r'\d+', (time_split[1])).group())
+        a_tag = self.tag.find("a")
+        if a_tag is not None:
+            href = a_tag.get("href")
             if href[0:4] != "http":
                 href = self.base_url + href
-            links.append(href)
-        self.content = contents + "\n".join(links)
+            self.content = f"《{time}》\n{a_tag.text}\n{href}"
+        else:
+            content = "\n".join(time_tag.find_next("td").text.split())
+            print(content)
+            url = "https://www.eng.tohoku.ac.jp/news/detail-,-id,1561.html"
+            self.content = f"《{time}》\n{content}\n{url}"
+        self.time = self.timeobj(time)
+
+    def timeobj(self, timestr=""):
+        year = "2020."
+        tmp = datetime.datetime.strptime(year + timestr, "%Y.%m.%d")
+        return datetime.date(tmp.year, tmp.month, tmp.day)
 
 class Eng(Site):
     path = os.path.join("..", os.path.join("sites_db", "eng.pickle"))
@@ -458,9 +468,19 @@ class Eng(Site):
     def get(self):
         soup = self.request()
         ## 以降、サイトに合わせて書き直す必要あり
-        info_list = soup.find(id="news-article-single").find_all("li")
+        info_list = soup.find(id="main").find_all("tr")
+        info_list = self.abstract(info_list)
         info_list = [EngNews(info, self.base_url) for info in info_list]
         return self.dic(info_list)
+
+    def abstract(self, tags=[]):
+        result = []
+        exception = []
+        for tag in tags:
+            if tag.text not in exception:
+                result.append(tag)
+                exception.append(tag.text)
+        return result
 
 
 ### 農学部・農学研究科 ###
