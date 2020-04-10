@@ -71,13 +71,15 @@ def callback():
 @handler.add(MessageEvent, message=TextMessage)
 def handle_message(event):
     text = event.message.text
-    userid = event.source.user_id
-    userid_df = pd.read_csv("userid.csv", encoding="cp932")
-    target_department = userid_df.loc[userid_df["userid"]==userid]["department"].values[0]
+    
     if text == "最新情報":
+        userid = event.source.user_id
+        userid_df = pd.read_csv("userid.csv", encoding="cp932")
+        print(userid_df)
+        target_department = userid_df.loc[userid_df["userid"]==userid]["department"].values[0]
         line_bot_api.reply_message(event.reply_token,[TextSendMessage(text=info.at_first(target_department))])
     else:
-        pass
+        line_bot_api.reply_message(event.reply_token,[TextSendMessage(text=text)])
 
 # 友だち登録（またはブロック解除）されたときにユーザに学部を選択させる
 @handler.add(FollowEvent)
@@ -165,5 +167,11 @@ def handle_unfollow(event):
 
 
 if __name__ ==  "__main__":
-    app.debug = True
-    app.run(port=8000)
+    data = {"department": ["学部"],
+            "subject": ["学科"],
+            "userid": ["1234567890"]}
+    userid_df = pd.DataFrame(data)
+    userid_df.to_csv("userid.csv", encoding="cp932", index=False)
+
+    port = int(os.environ.get('PORT', 8000))
+    app.run(host ='0.0.0.0',port = port)
