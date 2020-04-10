@@ -477,28 +477,30 @@ class AgriNews(News):
     ## this should be overrided
     ## because the format of news will be different from the others
     def summary(self):
-        self.time = self.tag.find("p").text.split(" | ")[-1]
-        a_tags = self.tag.find_all("a")
-        contents = "".join(self.tag.text.split(" | " + self.time))
-        links = []
-        for i in range(len(a_tags)):
-            href = a_tags[i].get("href")
-            if href[0:4] != "http":
-                href = self.base_url + href
-            links.append(href)
-        self.content = contents + "\n".join(links)
+        time = re.search("\d+.\d+", self.tag.text).group()
+        contents = self.tag.text.split("更新　")[-1]
+        href = self.tag.get("href")
+        if href[0:4] != "http":
+            href = self.base_url + href
+        self.content = f"《{time}》\n{contents}\n{href}"
+        self.time = self.timeobj(time)
+
+    def timeobj(self, timestr=""):
+        year = "2020."
+        tmp = datetime.datetime.strptime(year + timestr, "%Y.%m.%d")
+        return datetime.date(tmp.year, tmp.month, tmp.day)
 
 class Agri(Site):
     path = os.path.join("..", os.path.join("sites_db", "agri.pickle"))
     url = "https://www.agri.tohoku.ac.jp/jp/news/covid-19/"
-    base_url = "https://www.agri.tohoku.ac.jp"
+    base_url = "https://www.agri.tohoku.ac.jp/jp/news/covid-19/"
     major = ["農学部", "農学研究科"]
 
     def get(self):
         soup = self.request()
         ## 以降、サイトに合わせて書き直す必要あり
-        info_list = soup.find(id="news-article-single").find_all("li")
-        info_list = [AgriNews(info, self.base_url) for info in info_list]
+        info_list = soup.find("div", class_="area_news_cont").find_all("a")
+        info_list = [AgriNews(info, self.url) for info in info_list]
         return self.dic(info_list)
 
 
