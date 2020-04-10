@@ -120,11 +120,11 @@ class Sal(Site):
                 info_list_comp.append(stick)
 
         #その他の固定情報（日付をサイトの更新日と同じにしている）
-        stick1 = SalNews(info_list[0].find("a"))
-        stick1_url = "https://www.sal.tohoku.ac.jp/jp/news/covid19.html"
-        stick1.time = stick1.timeobj(timestr=time)
-        stick1.content = f"《{time}》\n2020年度 文学部・文学研究科のスケジュールについて\n{stick1_url}"
-        info_list_comp.append(stick1)
+        # stick1 = SalNews(info_list[0].find("a"))
+        # stick1_url = "https://www.sal.tohoku.ac.jp/jp/news/covid19.html"
+        # stick1.time = stick1.timeobj(timestr=time)
+        # stick1.content = f"《{time}》\n2020年度 文学部・文学研究科のスケジュールについて\n{stick1_url}"
+        # info_list_comp.append(stick1)
         return self.dic(info_list_comp)
 
 
