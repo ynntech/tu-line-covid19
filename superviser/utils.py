@@ -51,7 +51,7 @@ class Site:
 
     def request(self):
         print("接続中...")
-        response =  requests.get(self.url)
+        response = requests.get(self.url)
         response.encoding = response.apparent_encoding
         soup = BeautifulSoup(response.text, "lxml")
         print("Done!")

@@ -210,37 +210,43 @@ class Law(Site):
 
 
 ### 経済学部・経済学研究科 ###
-class EconNews(News):
-    def __init__(self, tag):
-        '''
-        <parameter>
-        tag (bs4.element.Tag) : single topic object
-        '''
-        self.tag = tag
+class EconNews:
+    def __init__(self, data):
+        self.data = data
         self.summary()
 
     ## this should be overrided
     ## because the format of news will be different from the others
     def summary(self):
-        self.time = self.tag.find("p").text.split(" | ")[-1]
-        a_tags = self.tag.find_all("a")
-        contents = "".join(self.tag.text.split(" | " + self.time))
-        links = []
-        for i in range(len(a_tags)):
-            href = a_tags[i].get("href")
-            links.append(href)
-        self.content = contents + "\n".join(links)
+        split_text = self.data.split("\\n")
+        content = split_text[0].split("タイトル：")[-1]
+        time = split_text[1].split("発信日：")[-1]
+        self.content = f"《{time}》\n{content}"
+        self.time = self.timeobj(time)
+
+    def timeobj(self, timestr=""):
+        tmp = datetime.datetime.strptime(timestr, "%Y年%m月%d日")
+        return datetime.date(tmp.year, tmp.month, tmp.day)
 
 class Econ(Site):
     path = os.path.join("..", os.path.join("sites_db", "econ.pickle"))
-    url = "https://sites.google.com/view/rinji-econ-tohoku-ac-jp/"
+    ### ここは特例でGoogle documentやで。頑張ろうな
+    url = "https://docs.google.com/document/d/19ArkoemdFSNdgeF0XQO8mI3QNhjkUbXp2lrewNGh1qQ/edit"
     major = ["経済学部", "経済学研究科"]
 
     def get(self):
         soup = self.request()
         ## 以降、サイトに合わせて書き直す必要あり
-        info_list = soup.find(id="news-article-single").find_all("li")
+        blocks = soup.find_all("script")
+        for i in range(len(blocks)):
+            if blocks[i].text[0:18] == "DOCS_modelChunk = ":
+                block = blocks[i]
+                break
+        info_list = block.text.split("{")[1].split("}")[0].split('"')[-2].split("----------上から順に新しい情報となります----------\\n")[1:]
         info_list = [EconNews(info) for info in info_list]
+        ### 固定情報
+        info_list[-1].content += "\n\n詳細はこちら\nhttps://sites.google.com/view/rinji-econ-tohoku-ac-jp/"
+        ###
         return self.dic(info_list)
 
 
