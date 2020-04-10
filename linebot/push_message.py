@@ -18,7 +18,7 @@ def push_message(message, user_majors, subject=False):
     """
     userid_df = pd.read_csv("userid.csv", encoding="cp932")
     for user_major in user_majors: #学部，研究科がリストで渡されるため対応
-        if user_major == "全学向け":
+        if user_major == "全学生向け":
             target_ids = userid_df["userid"]
         else:
             if subject: # subjectがTrueのときは学科で送信先のユーザを指定
