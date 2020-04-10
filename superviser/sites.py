@@ -172,28 +172,23 @@ class Sed(Site):
 
 ### 法学部・法学研究科 ###
 class LawNews(News):
-    def __init__(self, tag, base_url):
+    def __init__(self):
         '''
         <parameter>
         tag (bs4.element.Tag) : single topic object
         '''
-        self.tag = tag
-        self.base_url = base_url
         self.summary()
 
     ## this should be overrided
     ## because the format of news will be different from the others
     def summary(self):
-        self.time = self.tag.find("p").text.split(" | ")[-1]
-        a_tags = self.tag.find_all("a")
-        contents = "".join(self.tag.text.split(" | " + self.time))
-        links = []
-        for i in range(len(a_tags)):
-            href = a_tags[i].get("href")
-            if href[0:4] != "http":
-                href = self.base_url + href
-            links.append(href)
-        self.content = contents + "\n".join(links)
+        self.time = ""
+        self.content = ""
+
+    def timeobj(self, timestr=""):
+        year = "2020."
+        tmp = datetime.datetime.strptime(year + timestr, "%Y.%m.%d")
+        return datetime.date(tmp.year, tmp.month, tmp.day)
 
 class Law(Site):
     path = os.path.join("..", os.path.join("sites_db", "law.pickle"))
@@ -203,9 +198,13 @@ class Law(Site):
 
     def get(self):
         soup = self.request()
-        ## 以降、サイトに合わせて書き直す必要あり
-        info_list = soup.find(id="news-article-single").find_all("li")
-        info_list = [LawNews(info, self.base_url) for info in info_list]
+        info_list = []
+        permanent1 = LawNews()
+        time = soup.find(class_="law-sub-contents pos-left").find("p").text.split("：")[-1]
+        time = "{}.{}".format(time.split("/")[0], time.split("/")[1])
+        permanent1.content = "《{}》\n新コロナウイルス感染症（COVID-19）への対応についてが更新されました\n{}".format(time, self.url)
+        permanent1.time = permanent1.timeobj(timestr=time)
+        info_list.append(permanent1)
         return self.dic(info_list)
 
 
