@@ -7,7 +7,7 @@ import pandas as pd
 LINE_CHANNEL_ACCESS_TOKEN = os.environ["LINE_CHANNEL_ACCESS_TOKEN"]
 line_bot_api = LineBotApi(LINE_CHANNEL_ACCESS_TOKEN)
 
-def push_message(message, user_major, subject=False):
+def push_message(message, user_majors, subject=False):
     """
     ==Parameters==
         message(str)      : ユーザに送りたいメッセージ 
@@ -16,23 +16,16 @@ def push_message(message, user_major, subject=False):
     ==Return==
         None
     """
-    if user_major == "全学生向け":
-        userid_df = pd.read_csv("userid.csv", encoding="cp932")
-        target_ids = userid_df["userid"]
-
-        for userid in target_ids:
-            try:                            #メッセージを送信したい相手のIDを入力
-                line_bot_api.push_message(userid, TextSendMessage(text=message))
-            except LineBotApiError as e:
-                print("error!")
-    else:
-        if subject:
-            key_major == "subject"
+    userid_df = pd.read_csv("userid.csv", encoding="cp932")
+    for user_major in user_majors: #学部，研究科がリストで渡されるため対応
+        if user_major == "全学向け":
+            target_ids = userid_df["userid"]
         else:
-            key_major == "department"
-
-        userid_df = pd.read_csv("userid.csv", encoding="cp932")
-        target_ids = userid_df.loc[userid_df[key_major]==user_major]["user_id"] #対象学部のuseridのリストを取得
+            if subject: # subjectがTrueのときは学科で送信先のユーザを指定
+                key_major = "subject"
+            else:
+                key_major = "department"
+            target_ids = userid_df.loc[userid_df[key_major]==user_major]["user_id"] #対象学部のuseridのリストを取得
 
         for userid in target_ids:
             try:                            #メッセージを送信したい相手のIDを入力
