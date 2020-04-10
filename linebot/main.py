@@ -77,7 +77,8 @@ def handle_message(event):
         userid_df = pd.read_csv("userid.csv", encoding="cp932")
         print(userid_df)
         target_department = userid_df.loc[userid_df["userid"]==userid]["department"].values[0]
-        line_bot_api.reply_message(event.reply_token,[TextSendMessage(text=info.at_first(target_department))])
+        line_bot_api.reply_message(event.reply_token,[TextSendMessage(text=info.now("全学生向け")),
+                                                    TextSendMessage(text=info.now(department))])
     else:
         line_bot_api.reply_message(event.reply_token,[TextSendMessage(text=text)])
 
@@ -155,7 +156,9 @@ def handle_postback(event):
 
         # 登録した所属の最新情報を送信
         line_bot_api.reply_message(event.reply_token,
-                [TextSendMessage(text=user_major +"で登録しました。"), TextSendMessage(text=info.at_first(department))])
+                [TextSendMessage(text=user_major +"で登録しました。"),
+                TextSendMessage(text=info.now("全学生向け")),
+                TextSendMessage(text=info.now(department))])
 
 # ブロックされたときにuserid辞書からユーザーのidを削除
 @handler.add(UnfollowEvent)

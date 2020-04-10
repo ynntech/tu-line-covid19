@@ -8,7 +8,7 @@ from collections import defaultdict
 from info import Info
 
 info = Info()
-info.at_first("工学部")
+info.now("工学部")
 とかすれば最新の情報がstrで返ってくるよ。
 '''
 
@@ -38,7 +38,10 @@ class Info:
         else:
             contents = ["="*15, f"{major}に現在登録されている情報は{len(data)}件です。"]
             for v in data.values():
-                contents.append(v)
+                for info in v:
+                    contents.append(info)
+            if major == "全学生向け":
+                contents.append(f"{'='*15}\n東北大学オンライン授業ガイド\nhttps://sites.google.com/view/teleclass-tohoku/forstudents")
             return "\n".join(contents)
 
     def read(self, path):
@@ -52,9 +55,3 @@ class Info:
         else:
             print("ファイルが見つかりませんでした。")
             return None
-
-    def at_first(self, major):
-        contents = ["現時点で登録されている情報です。", self.now("全学生向け"),
-                    "東北大学オンライン授業ガイド\nhttps://sites.google.com/view/teleclass-tohoku/forstudents",
-                    self.now(major)]
-        return "\n".join(contents)

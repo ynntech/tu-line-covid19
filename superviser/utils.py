@@ -58,9 +58,10 @@ class Site:
         return soup
 
     def dic(self, info_list=[]):
+        info_list = sorted(info_list, key=lambda x:x.time, reverse=True)
         data = defaultdict(list)
         for item in info_list:
-            data[item.time] = item.content
+            data[item.time].append(item.content)
         return data
 
     def update(self):
@@ -94,7 +95,10 @@ class Site:
         print("データベースを読み込み中...")
         if os.path.exists(self.path):
             with open(self.path, 'rb') as f:
-                data = pickle.load(f)
+                data = defaultdict(list)
+                data_row = pickle.load(f)
+                for d in data_row:
+                    data[d[0]] = d[1]
                 print("Done!")
             return data
         else:
@@ -116,19 +120,23 @@ class Superviser:
         self._timers = timers
         for timer in timers:
             schedule.every().day.at(timer).do(self.call)
+        self.call(post=False)
 
-    def call(self):
+    def call(self, post=True):
         print("定期実行中")
         for obj in self._targets:
             result = obj.new
             if result is not None:
-                contents = ["新規情報があります"]
-                for k, v in result.items():
-                    contents.append(f"{k}\n{v}")
+                contents = ["新規情報があります。", "公式サイトもご確認ください。", obj.url]
+                for v in result.values():
+                    for info in v:
+                        contents.append(info)
                 message = "\n".join(contents)
                 ## line api, push message
                 for major in obj.major:
-                    push_message(message=message, major=major)
+                    print(major, contents)
+                    if post:
+                        push_message(message=message, major=major)
 
     def run(self):
         while True:

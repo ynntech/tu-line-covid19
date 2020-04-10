@@ -23,7 +23,8 @@ if __name__ == "__main__":
     _bme = Bme()
     targets = [_tu, _sal, _sed, _law, _econ, _sci, _med, _dent, _pharm,
                _eng, _agri, _intcul, _is, _lifesci, _kankyo, _bme]
-    timers = ["9:00", "12:00", "17:00", "21:00"]
+    timers = ["9:00", "10:00", "11:00", "12:00", "13:00", "14:00", "15:00",
+              "16:00", "17:00", "18:00", "19:00", "20:00","21:00"]
 
     supervise = Superviser(targets=targets, timers=timers)
     supervise.run()
