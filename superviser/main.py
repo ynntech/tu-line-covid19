@@ -9,7 +9,7 @@ if __name__ == "__main__":
     #_sal = Sal()
     _sed = Sed()
     #_law = Law()
-    #_econ = Econ()
+    _econ = Econ()
     _sci = Sci()
     _med = Med()
     _dent = Dent()
