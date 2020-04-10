@@ -43,7 +43,7 @@ major_dic = {"文学部":["人文社会学科"], "教育学部":["教育科学�
             "工学部":["機械知能・航空工学科","電気情報物理工学科","化学・バイオ工学科","材料化学総合学科","建築・社会工学科"],\
             "農学部":["生物生産科学科","応用生物化学科"], "文学研究科":None, "教育学研究科":None, "法学研究科":None,\
             "経済学研究科":None, "理学研究科":None, "医学系研究科":None, "歯学研究科":None, "薬学研究科":None, "工学研究科":None,\
-            "農学研究科":None, "国際文化研究科":None, "情報科学研究科":None, "生命化学研究科":None, "環境科学研究科":None, "医工学研究科":None}
+            "農学研究科":None, "国際文化研究科":None, "情報科学研究科":None, "生命科学研究科":None, "環境科学研究科":None, "医工学研究科":None}
 
 @app.route("/callback", methods=['POST'])
 def callback():
@@ -87,13 +87,14 @@ def handle_message(event):
 def handle_follow(event):
     line_bot_api.reply_message(
             event.reply_token,
+            [TextSendMessage(text="友だち追加ありがとうございます。\n\n登録した学部・研究科と、全学生向けのコロナウイルス関連のサイト掲載情報を配信します。\n\n概要・免責事項等は当LINEbotのタイムライン投稿をご覧ください。"),
             TextSendMessage(
-                text='友達登録ありがとうございます。\n\n登録した学部・研究科と、全学生向けのコロナウイルス関連情報の更新を通知でお知らせします。\n\n下のボタンから学部生か院生かを選択し、その後学部または研究科を選択してください。\n\n登録し直す場合は一度このbotをブロックし、その後ブロック解除してください。',
-                quick_reply=QuickReply(
-                    items=[QuickReplyButton(action=PostbackAction(label="学部生", data="学部生")),
+            text="下のボタンから学部生か院生かを選択し、その後学部または研究科を選択してください。\n\n登録し直す場合は一度このLINEbotをブロックし、その後ブロック解除してください。",
+            quick_reply=QuickReply(
+                items=[QuickReplyButton(action=PostbackAction(label="学部生", data="学部生")),
                             QuickReplyButton(action=PostbackAction(label="院生", data="院生"))]
-                ))) # QuickReplyというリッチメッセージが起動してPostbackEventを発生させる
-
+            ))]) # QuickReplyというリッチメッセージが起動してPostbackEventを発生させる
+    
 # Postbackを受け取る
 @handler.add(PostbackEvent)
 def handle_postback(event):
@@ -101,7 +102,7 @@ def handle_postback(event):
         line_bot_api.reply_message(
             event.reply_token,
             TextSendMessage(
-                text='下のボタをスワイプして学部を選択してください。',
+                text='下のボタンをスワイプして学部を選択してください。',
                 quick_reply=QuickReply(
                     items=[QuickReplyButton(action=PostbackAction(label=department, data=department)) for department in list(major_dic.keys())[:10]]
                 )))
@@ -112,7 +113,7 @@ def handle_postback(event):
         line_bot_api.reply_message(
             event.reply_token,
             TextSendMessage(
-                text="下のボタンをスワイプして研究科を選択してください",
+                text="下のボタンをスワイプして研究科を選択してください。",
                 quick_reply=QuickReply(
                     items=items
                 )))
@@ -155,10 +156,12 @@ def handle_postback(event):
         newid.to_csv("userid.csv", encoding="cp932", index=False, mode="a", header=False)
 
         # 登録した所属の最新情報を送信
-        line_bot_api.reply_message(event.reply_token,
-                [TextSendMessage(text=user_major +"で登録しました。"),
-                TextSendMessage(text=info.now("全学生向け")),
-                TextSendMessage(text=info.now(department))])
+        information_all = info.now("全学生向け").split("\n&&&\n")
+        information_dep = info.now(department).split("\n&&&\n")
+        TextSendMessages_all = [TextSendMessage(text=info_) for info_ in information_all]
+        TextSendMessages_dep = [TextSendMessage(text=info_) for info_ in information_dep]
+        TextSendMessages_all.extend(TextSendMessages_dep) 
+        line_bot_api.reply_message(event.reply_token, TextSendMessages_all)
 
 # ブロックされたときにuserid辞書からユーザーのidを削除
 @handler.add(UnfollowEvent)
