@@ -34,15 +34,18 @@ class Info:
     def now(self, major):
         data = self.read(path=self.major_index[major])
         if data is None:
-            return f"{'='*15}\n{major}に登録された情報はありません。"
+            return f"{'='*15}\n{major}に登録された情報はありません。\n{'='*15}"
         else:
-            contents = ["="*15, f"{major}に現在登録されている情報は{len(data)}件です。"]
+            contents = []
+            count = 0
             for v in data.values():
                 for info in v:
                     contents.append(info)
+                    count += 1
             if major == "全学生向け":
                 contents.append(f"{'='*15}\n東北大学オンライン授業ガイド\nhttps://sites.google.com/view/teleclass-tohoku/forstudents")
-            return "\n".join(contents)
+            header = ["="*15, f"{major}に現在登録されている情報は{count}件です。", "="*15]
+            return "\n".join(header + contents)
 
     def read(self, path):
         path = os.path.join(self.db_root, path)

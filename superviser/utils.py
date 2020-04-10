@@ -127,7 +127,9 @@ class Superviser:
         for obj in self._targets:
             result = obj.new
             if result is not None:
-                contents = ["新規情報があります。", "公式サイトもご確認ください。", obj.url]
+                contents = ["新規情報があります。",
+                            "公式サイトもご確認ください。", obj.url,
+                            "="*15]
                 for v in result.values():
                     for info in v:
                         contents.append(info)
