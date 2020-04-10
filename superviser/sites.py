@@ -86,26 +86,46 @@ class SalNews(News):
     ## this should be overrided
     ## because the format of news will be different from the others
     def summary(self):
-        self.time = self.tag.find("p").text.split(" | ")[-1]
-        a_tags = self.tag.find_all("a")
-        contents = "".join(self.tag.text.split(" | " + self.time))
-        links = []
-        for i in range(len(a_tags)):
-            href = a_tags[i].get("href")
-            links.append(href)
-        self.content = contents + "\n".join(links)
+        self.time = ""
+        self.content = ""
+
+    def timeobj(self, timestr=""):
+        year = "2020."
+        tmp = datetime.datetime.strptime(year + timestr, "%Y.%m.%d")
+        return datetime.date(tmp.year, tmp.month, tmp.day)
 
 class Sal(Site):
     path = os.path.join("..", os.path.join("sites_db", "sal.pickle"))
     url = "https://www.sal.tohoku.ac.jp/jp/news/covid19.html"
+    base_url = "https://www.sal.tohoku.ac.jp/"
     major = ["文学部", "文学研究科"]
 
     def get(self):
         soup = self.request()
-        ## 以降、サイトに合わせて書き直す必要あり
-        info_list = soup.find(id="news-article-single").find_all("li")
-        info_list = [SalNews(info) for info in info_list]
-        return self.dic(info_list)
+        info_list_comp = []
+        info_list = soup.find("article").find_all("section")[:-1]
+        grade_list = [str(info.find("h3"))[4:-5] for info in info_list] # 各行の対象学年を格納
+        info_list_ = [info.find("tr") for info in info_list] # サイトの各行はtrタグ
+        for num, info in enumerate(info_list_):
+            if info.find("a") is not None: # aタグが存在している行だけ処理していく
+                href = self.base_url + info.find("a").get("href")
+                time_tmp = info.find("a").get("href").split("_")[-2][4:] #ファイル名から日付を取得
+                time = "{}.{}".format(int(time_tmp[:2]), int(time_tmp[2:])) 
+                school = "文学部" if num < 3 else "大学院文学研究科" # 上から何番目のsectionタグかで学部か大学院かを判断
+                event = info.find("th").text # 対象の行事を取得
+                contents = "{} {}の{}について".format(school, grade_list[num], event) 
+                stick = SalNews(info_list[0].find("a"))
+                stick.time = stick.timeobj(timestr=time)
+                stick.content = "《{}》\n{}\n{}".format(time, contents, href)
+                info_list_comp.append(stick)
+
+        #その他の固定情報（日付をサイトの更新日と同じにしている）
+        stick1 = SalNews(info_list[0].find("a"))
+        stick1_url = "https://www.sal.tohoku.ac.jp/jp/news/covid19.html"
+        stick1.time = stick1.timeobj(timestr=time)
+        stick1.content = f"《{time}》\n2020年度 文学部・文学研究科のスケジュールについて\n{stick1_url}"
+        info_list_comp.append(stick1)
+        return self.dic(info_list_comp)
 
 
 ### 教育学部・教育学研究科 ###
