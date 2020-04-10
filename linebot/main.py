@@ -33,7 +33,7 @@ info = Info()
 
 LINE_CHANNEL_ACCESS_TOKEN = os.environ["LINE_CHANNEL_ACCESS_TOKEN"]
 LINE_CHANNEL_SECRET = os.environ["LINE_CHANNEL_SECRET"]
-line_bot_api = LineBotApi(LINE_CHANNEL_ACCESS_TOKEN) 
+line_bot_api = LineBotApi(LINE_CHANNEL_ACCESS_TOKEN)
 handler = WebhookHandler(LINE_CHANNEL_SECRET)
 
 #QuickReplyで表示する選択肢たち
@@ -102,7 +102,7 @@ def handle_postback(event):
                 quick_reply=QuickReply(
                     items=[QuickReplyButton(action=PostbackAction(label=department, data=department)) for department in list(major_dic.keys())[:10]]
                 )))
-                
+
     elif event.postback.data == "院生" or event.postback.data == "ひとつ前に戻る":
         items = [QuickReplyButton(action=PostbackAction(label=department, data=department)) for department in list(major_dic.keys())[10:17]]
         items.append(QuickReplyButton(action=PostbackAction(label="さらに表示する", data="さらに表示する")))
@@ -126,7 +126,7 @@ def handle_postback(event):
                 )))
 
     # 学部を選択した場合は、学科を選択してもらう
-    elif event.postback.data[-1] == "部": 
+    elif event.postback.data[-1] == "部":
         department = event.postback.data
         line_bot_api.reply_message(
             event.reply_token,
@@ -137,7 +137,7 @@ def handle_postback(event):
                 )))
 
     # 所属が選択された後、所属とuseridをcsvに追記
-    elif event.postback.data[-1] == "科": 
+    elif event.postback.data[-1] == "科":
         user_major = event.postback.data
         userid = event.source.user_id
 
@@ -147,14 +147,14 @@ def handle_postback(event):
         else:                     # 学部を選択したときのみsubjectがある
             department = user_major.split(" ")[0]
             subject = user_major.split(" ")[1]
-        
+
         newid = pd.DataFrame([department, subject, userid], index=["department", "subject", "user_id"]).T
         newid.to_csv("userid.csv", encoding="cp932", index=False, mode="a", header=False)
 
         # 登録した所属の最新情報を送信
         line_bot_api.reply_message(event.reply_token,
                 [TextSendMessage(text=user_major +"で登録しました。"), TextSendMessage(text=info.at_first(department))])
-        
+
 # ブロックされたときにuserid辞書からユーザーのidを削除
 @handler.add(UnfollowEvent)
 def handle_unfollow(event):
