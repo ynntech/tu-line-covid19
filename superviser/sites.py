@@ -470,7 +470,26 @@ class Eng(Site):
         ## 以降、サイトに合わせて書き直す必要あり
         info_list = soup.find(id="main").find_all("tr")
         info_list = self.abstract(info_list)
+        ### 固定情報
+        stick1 = EngNews(info_list[0])
+        contents = ["《4/10》",
+                    "【新型コロナウイルス感染拡大防止のための自宅待機のお願い】",
+                    "令和2年4月9日(木)から5月6日(水)まで、原則として登校を禁止し、研究室活動を制限します",
+                    "https://www.eng.tohoku.ac.jp/news/detail-,-id,1582.html",
+                    "https://www.eng.tohoku.ac.jp/news/detail-,-id,1581.html"]
+        stick1.time = stick1.timeobj(timestr="4/10")
+        stick1.content = "\n".join(contents)
+
+        stick2 = EngNews(info_list[0])
+        contents = ["《4/10》",
+                    "【全学生 要回答】東北大ID受取確認(新入生対象), 遠隔授業の受講環境等の調査を実施しています。",
+                    "https://www.eng.tohoku.ac.jp/news/detail-,-id,1576.html#survey"]
+        stick2.time = stick1.timeobj(timestr="4/10")
+        stick2.content = "\n".join(contents)
+        sticks = [stick1, stick2]
+        ###
         info_list = [EngNews(info, self.base_url) for info in info_list]
+        info_list = sticks + info_list
         return self.dic(info_list)
 
     def abstract(self, tags=[]):
@@ -537,14 +556,22 @@ class IntculNews(News):
     ## this should be overrided
     ## because the format of news will be different from the others
     def summary(self):
-        self.time = self.tag.find("p").text.split(" | ")[-1]
+        time = self.tag.find("th").text
         a_tags = self.tag.find_all("a")
-        contents = "".join(self.tag.text.split(" | " + self.time))
+        contents = []
         links = []
         for i in range(len(a_tags)):
             href = a_tags[i].get("href")
             links.append(href)
-        self.content = contents + "\n".join(links)
+            contents.append(a_tags[i].text)
+        contents = "\n".join(contents)
+        links = "\n".join(links)
+        self.content = f"《{time}》\n{contents}\n{links}"
+        self.time = self.timeobj(time)
+
+    def timeobj(self, timestr=""):
+        tmp = datetime.datetime.strptime(timestr, "%Y年%m月%d日")
+        return datetime.date(tmp.year, tmp.month, tmp.day)
 
 class Intcul(Site):
     path = os.path.join("..", os.path.join("sites_db", "intcul.pickle"))
@@ -554,7 +581,7 @@ class Intcul(Site):
     def get(self):
         soup = self.request()
         ## 以降、サイトに合わせて書き直す必要あり
-        info_list = soup.find(id="news-article-single").find_all("li")
+        info_list = soup.find_all("tr")
         info_list = [IntculNews(info) for info in info_list]
         return self.dic(info_list)
 

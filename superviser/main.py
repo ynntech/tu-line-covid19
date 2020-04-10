@@ -6,20 +6,20 @@ from sites import (TU, Sal, Sed, Law, Econ, Sci, Med, Dent, Pharm,
 
 if __name__ == "__main__":
     _tu = TU()
-    _sal = Sal()
-    _sed = Sed()
-    _law = Law()
-    _econ = Econ()
+    #_sal = Sal()
+    #_sed = Sed()
+    #_law = Law()
+    #_econ = Econ()
     _sci = Sci()
-    _med = Med()
+    #_med = Med()
     _dent = Dent()
     _pharm = Pharm()
     _eng = Eng()
     _agri = Agri()
     _intcul = Intcul()
-    _is = IS()
-    _lifesci = Lifesci()
-    _kankyo = Kankyo()
+    #_is = IS()
+    #_lifesci = Lifesci()
+    #_kankyo = Kankyo()
     _bme = Bme()
     targets = [_tu, _sal, _sed, _law, _econ, _sci, _med, _dent, _pharm,
                _eng, _agri, _intcul, _is, _lifesci, _kankyo, _bme]
