@@ -122,16 +122,19 @@ class SedNews(News):
     ## this should be overrided
     ## because the format of news will be different from the others
     def summary(self):
-        self.time = self.tag.find("p").text.split(" | ")[-1]
-        a_tags = self.tag.find_all("a")
-        contents = "".join(self.tag.text.split(" | " + self.time))
-        links = []
-        for i in range(len(a_tags)):
-            href = a_tags[i].get("href")
-            if href[0:4] != "http":
-                href = self.base_url + href
-            links.append(href)
-        self.content = contents + "\n".join(links)
+        contents = self.tag.text.split("｜")[0]
+        href = self.tag.get("href")
+        if href[0:4] != "http":
+            href = self.base_url + "/" + href.split("./")[-1]
+        time_split = self.tag.text.split("|")[-1].split(".")[-2:]
+        time = "{}.{}".format(str(int(time_split[0])), str(int(time_split[1])))
+        self.content = f"《{time}》\n{contents}\n{href}"
+        self.time = self.timeobj(time)        
+
+    def timeobj(self, timestr=""):
+        year = "2020."
+        tmp = datetime.datetime.strptime(year + timestr, "%Y.%m.%d")
+        return datetime.date(tmp.year, tmp.month, tmp.day)
 
 class Sed(Site):
     path = os.path.join("..", os.path.join("sites_db", "sed.pickle"))
@@ -142,7 +145,7 @@ class Sed(Site):
     def get(self):
         soup = self.request()
         ## 以降、サイトに合わせて書き直す必要あり
-        info_list = soup.find(id="news-article-single").find_all("li")
+        info_list = soup.find("div", class_="inner").find_all("ul")[0].find_all("a")
         info_list = [SedNews(info, self.base_url) for info in info_list]
         return self.dic(info_list)
 
