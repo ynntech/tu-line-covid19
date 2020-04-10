@@ -462,7 +462,6 @@ class EngNews(News):
             self.content = f"《{time}》\n{a_tag.text}\n{href}"
         else:
             content = "\n".join(time_tag.find_next("td").text.split())
-            print(content)
             url = "https://www.eng.tohoku.ac.jp/news/detail-,-id,1561.html"
             self.content = f"《{time}》\n{content}\n{url}"
         self.time = self.timeobj(time)
@@ -484,20 +483,20 @@ class Eng(Site):
         info_list = soup.find(id="main").find_all("tr")
         info_list = self.abstract(info_list)
         ### 固定情報
-        stick1 = EngNews(info_list[0])
+        stick1 = EngNews(info_list[0], self.base_url)
         contents = ["《4/10》",
                     "【新型コロナウイルス感染拡大防止のための自宅待機のお願い】",
                     "令和2年4月9日(木)から5月6日(水)まで、原則として登校を禁止し、研究室活動を制限します",
                     "https://www.eng.tohoku.ac.jp/news/detail-,-id,1582.html",
                     "https://www.eng.tohoku.ac.jp/news/detail-,-id,1581.html"]
-        stick1.time = stick1.timeobj(timestr="4/10")
+        stick1.time = stick1.timeobj(timestr="4.10")
         stick1.content = "\n".join(contents)
 
-        stick2 = EngNews(info_list[0])
+        stick2 = EngNews(info_list[0], self.base_url)
         contents = ["《4/10》",
                     "【全学生 要回答】東北大ID受取確認(新入生対象), 遠隔授業の受講環境等の調査を実施しています。",
                     "https://www.eng.tohoku.ac.jp/news/detail-,-id,1576.html#survey"]
-        stick2.time = stick1.timeobj(timestr="4/10")
+        stick2.time = stick1.timeobj(timestr="4.10")
         stick2.content = "\n".join(contents)
         sticks = [stick1, stick2]
         ###
