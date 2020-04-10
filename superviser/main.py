@@ -7,11 +7,11 @@ from sites import (TU, Sal, Sed, Law, Econ, Sci, Med, Dent, Pharm,
 if __name__ == "__main__":
     _tu = TU()
     #_sal = Sal()
-    #_sed = Sed()
+    _sed = Sed()
     #_law = Law()
     #_econ = Econ()
     _sci = Sci()
-    #_med = Med()
+    _med = Med()
     _dent = Dent()
     _pharm = Pharm()
     _eng = Eng()

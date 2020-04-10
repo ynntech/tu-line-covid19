@@ -129,7 +129,7 @@ class SedNews(News):
         time_split = self.tag.text.split("|")[-1].split(".")[-2:]
         time = "{}.{}".format(str(int(time_split[0])), str(int(time_split[1])))
         self.content = f"《{time}》\n{contents}\n{href}"
-        self.time = self.timeobj(time)        
+        self.time = self.timeobj(time)
 
     def timeobj(self, timestr=""):
         year = "2020."
@@ -293,28 +293,32 @@ class MedNews(News):
     ## this should be overrided
     ## because the format of news will be different from the others
     def summary(self):
-        self.time = self.tag.find("p").text.split(" | ")[-1]
-        a_tags = self.tag.find_all("a")
-        contents = "".join(self.tag.text.split(" | " + self.time))
-        links = []
-        for i in range(len(a_tags)):
-            href = a_tags[i].get("href")
-            if href[0:4] != "http":
-                href = self.base_url + href
-            links.append(href)
-        self.content = contents + "\n".join(links)
+        if self.tag.text[-1] == "）":
+            time = self.tag.text.split("（")[-1].split("）")[0]
+            contents = self.tag.text[:(-2 - len(time))]
+        else:
+            time = re.findall(r"\d+/\d+", self.tag.text)[-1]
+            contents = self.tag.text[:(-len(time))]
+        href = "#" + self.tag.find("a").get("id")
+        href = self.base_url + href
+        self.content = f"《{time}》\n{contents}\n{href}"
+        self.time = self.timeobj(time)
+
+    def timeobj(self, timestr=""):
+        year = "2020/"
+        tmp = datetime.datetime.strptime(year + timestr, "%Y/%m/%d")
+        return datetime.date(tmp.year, tmp.month, tmp.day)
 
 class Med(Site):
     path = os.path.join("..", os.path.join("sites_db", "med.pickle"))
-    url = "https://www.med.tohoku.ac.jp/admissions/2003announce/index.html#cst3"
-    base_url = "https://www.med.tohoku.ac.jp"
+    url = "https://www.med.tohoku.ac.jp/admissions/2003announce/index.html"
     major = ["医学部", "医学系研究科"]
 
     def get(self):
         soup = self.request()
         ## 以降、サイトに合わせて書き直す必要あり
-        info_list = soup.find(id="news-article-single").find_all("li")
-        info_list = [MedNews(info, self.base_url) for info in info_list]
+        info_list = soup.find("div", class_="wrap_contarea sp_contarea area_u-layer_cont").find_all("h4")[:-1]
+        info_list = [MedNews(info, self.url) for info in info_list]
         return self.dic(info_list)
 
 
