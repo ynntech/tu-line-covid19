@@ -404,7 +404,14 @@ class Pharm(Site):
         ## 以降、サイトに合わせて書き直す必要あり
         info_list = soup.find("div", class_="contents_wrap_box").find_all("a")
         info_list = self.abstract(info_list)
+        ### 固定情報
+        stick1 = PharmNews(info_list[0])
+        stick1_url = "http://www.pharm.tohoku.ac.jp/info/200331/200331.shtml"
+        stick1.time = stick1.timeobj(timestr="4/10")
+        stick1.content = f"《4/10》\n学生の入構制限について\n{stick1_url}"
+        ###
         info_list = [PharmNews(info) for info in info_list]
+        info_list.append(stick1)
         return self.dic(info_list)
 
     def abstract(self, a_tags):
