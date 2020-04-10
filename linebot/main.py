@@ -170,11 +170,5 @@ def handle_unfollow(event):
 
 
 if __name__ ==  "__main__":
-    data = {"department": ["学部"],
-            "subject": ["学科"],
-            "userid": ["1234567890"]}
-    userid_df = pd.DataFrame(data)
-    userid_df.to_csv("userid.csv", encoding="cp932", index=False)
-
-    port = int(os.environ.get('PORT', 8000))
-    app.run(host ='0.0.0.0',port = port)
+    app.debug=True
+    app.run(port = 8000)
