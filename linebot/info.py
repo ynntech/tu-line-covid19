@@ -54,11 +54,14 @@ class Info:
                 for info in v:
                     contents.append(info)
                     count += 1
+                    if count%18==0: # lineメッセージの文字制限のためセパレーター文字列を追加
+                        contents.append("&&&")
             if major == "全学生向け":
                 contents.append(f"{'='*15}\n東北大学オンライン授業ガイド\nhttps://\
                             sites.google.com/view/teleclass-tohoku/forstudents")
             contents.append(f"公式サイトもご確認ください\n{url}")
             header = ["="*15, f"{major}に現在登録されている情報は{count}件です。", "="*15]
+            print("\n".join(header + contents))
             return "\n".join(header + contents)
 
     def read(self, path):
