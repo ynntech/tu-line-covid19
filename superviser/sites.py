@@ -110,10 +110,10 @@ class Sal(Site):
             if info.find("a") is not None: # aタグが存在している行だけ処理していく
                 href = self.base_url + info.find("a").get("href")
                 time_tmp = info.find("a").get("href").split("_")[-2][4:] #ファイル名から日付を取得
-                time = "{}.{}".format(int(time_tmp[:2]), int(time_tmp[2:])) 
+                time = "{}.{}".format(int(time_tmp[:2]), int(time_tmp[2:]))
                 school = "文学部" if num < 3 else "大学院文学研究科" # 上から何番目のsectionタグかで学部か大学院かを判断
                 event = info.find("th").text # 対象の行事を取得
-                contents = "{} {}の{}について".format(school, grade_list[num], event) 
+                contents = "{} {}の{}について".format(school, grade_list[num], event)
                 stick = SalNews(info_list[0].find("a"))
                 stick.time = stick.timeobj(timestr=time)
                 stick.content = "《{}》\n{}\n{}".format(time, contents, href)
@@ -171,17 +171,8 @@ class Sed(Site):
 
 
 ### 法学部・法学研究科 ###
-class LawNews(News):
+class LawNews:
     def __init__(self):
-        '''
-        <parameter>
-        tag (bs4.element.Tag) : single topic object
-        '''
-        self.summary()
-
-    ## this should be overrided
-    ## because the format of news will be different from the others
-    def summary(self):
         self.time = ""
         self.content = ""
 
