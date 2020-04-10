@@ -18,7 +18,7 @@ if __name__ == "__main__":
     _agri = Agri()
     _intcul = Intcul()
     _is = IS()
-    #_lifesci = Lifesci()
+    _lifesci = Lifesci()
     _kankyo = Kankyo()
     _bme = Bme()
     targets = [_tu, _sal, _sed, _law, _econ, _sci, _med, _dent, _pharm,
