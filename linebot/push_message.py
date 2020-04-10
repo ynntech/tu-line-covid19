@@ -7,7 +7,7 @@ import pandas as pd
 LINE_CHANNEL_ACCESS_TOKEN = os.environ["LINE_CHANNEL_ACCESS_TOKEN"]
 line_bot_api = LineBotApi(LINE_CHANNEL_ACCESS_TOKEN)
 
-def push_message(message, user_major, subject):
+def push_message(message, user_major, subject=False):
     """
     ==Parameters==
         message(str)      : ユーザに送りたいメッセージ 
@@ -25,7 +25,6 @@ def push_message(message, user_major, subject):
                 line_bot_api.push_message(userid, TextSendMessage(text=message))
             except LineBotApiError as e:
                 print("error!")
-
     else:
         if subject:
             key_major == "subject"
