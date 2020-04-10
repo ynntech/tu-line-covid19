@@ -632,41 +632,58 @@ class IS(Site):
 
 ### 生命科学研究科 ###
 class LifesciNews(News):
-    def __init__(self, tag, base_url):
+    month_dic = {"January":"1", "Jan":"1", "February":"2", "Feb":"2", "March":"3", "Mar":"3",
+                             "April":"4", "Apr":"4", "May":"5", "June":"6", "July":"7", "August":"8", "Aug":"8",
+                            "September":"9", "Sept":"9", "October":"10", "Oct":"10", "November":"11", "Nov":"11",
+                            "December":"12", "Dec":"12"}
+
+    def __init__(self, tag):
         '''
         <parameter>
         tag (bs4.element.Tag) : single topic object
         '''
         self.tag = tag
-        self.base_url = base_url
         self.summary()
 
     ## this should be overrided
     ## because the format of news will be different from the others
     def summary(self):
-        self.time = self.tag.find("p").text.split(" | ")[-1]
-        a_tags = self.tag.find_all("a")
-        contents = "".join(self.tag.text.split(" | " + self.time))
-        links = []
-        for i in range(len(a_tags)):
-            href = a_tags[i].get("href")
-            if href[0:4] != "http":
-                href = self.base_url + href
-            links.append(href)
-        self.content = contents + "\n".join(links)
+        content = self.tag.find("a").text
+        time = self.tag.text.split("(")[-1].split(" update")[0].strip("～").replace('\xa0', ' ')
+        href = self.tag.find("a").get("href")
+        self.content = f"《{time}》\n{content}\n{href}"
+        self.time = self.timeobj(time)
+
+    def timeobj(self, timestr=""):
+        year = "2020/"
+        month, day = re.split("[ .]", timestr)[:2]
+
+        date = year +self. month_dic[month] + "/" + day
+        tmp = datetime.datetime.strptime(date, "%Y/%m/%d")
+        return datetime.date(tmp.year, tmp.month, tmp.day)
 
 class Lifesci(Site):
     path = os.path.join("..", os.path.join("sites_db", "lifesci.pickle"))
     url = "https://www.lifesci.tohoku.ac.jp/outline/covid19_taiou/"
-    base_url = "https://www.lifesci.tohoku.ac.jp"
     major = ["生命科学研究科"]
 
     def get(self):
         soup = self.request()
         ## 以降、サイトに合わせて書き直す必要あり
-        info_list = soup.find(id="news-article-single").find_all("li")
-        info_list = [LifesciNews(info, self.base_url) for info in info_list]
+        info_list = soup.find("div", id="main").find_all("div")
+        info_list = self.abstract(info_list)
+        info_list = [LifesciNews(info) for info in info_list]
         return self.dic(info_list)
+
+    def abstract(self, tags):
+        result = []
+        for tag in tags:
+            a = tag.find("a")
+            if a is not None:
+                text = tag.text
+                if "update" in text:
+                    result.append(tag)
+        return result
 
 
 ### 環境科学研究科 ###
