@@ -372,41 +372,49 @@ class Dent(Site):
 
 ### 薬学部・薬学研究科 ###
 class PharmNews(News):
-    def __init__(self, tag, base_url):
+    def __init__(self, tag):
         '''
         <parameter>
         tag (bs4.element.Tag) : single topic object
         '''
         self.tag = tag
-        self.base_url = base_url
         self.summary()
 
     ## this should be overrided
     ## because the format of news will be different from the others
     def summary(self):
-        self.time = self.tag.find("p").text.split(" | ")[-1]
-        a_tags = self.tag.find_all("a")
-        contents = "".join(self.tag.text.split(" | " + self.time))
-        links = []
-        for i in range(len(a_tags)):
-            href = a_tags[i].get("href")
-            if href[0:4] != "http":
-                href = self.base_url + href
-            links.append(href)
-        self.content = contents + "\n".join(links)
+        time = re.search("\d+/\d+", self.tag.text).group()
+        contents = self.tag.text.split(time)[-1].split()[-1]
+        href = self.tag.get("href")
+        self.content = f"《{time}》\n{contents}\n{href}"
+        self.time = self.timeobj(time)
+
+    def timeobj(self, timestr=""):
+        year = "2020/"
+        tmp = datetime.datetime.strptime(year + timestr, "%Y/%m/%d")
+        return datetime.date(tmp.year, tmp.month, tmp.day)
 
 class Pharm(Site):
     path = os.path.join("..", os.path.join("sites_db", "pharm.pickle"))
     url = "http://www.pharm.tohoku.ac.jp/info/200331/200331.shtml"
-    base_url = "http://www.pharm.tohoku.ac.jp"
     major = ["薬学部", "薬学研究科"]
 
     def get(self):
         soup = self.request()
         ## 以降、サイトに合わせて書き直す必要あり
-        info_list = soup.find(id="news-article-single").find_all("li")
-        info_list = [PharmNews(info, self.base_url) for info in info_list]
+        info_list = soup.find("div", class_="contents_wrap_box").find_all("a")
+        info_list = self.abstract(info_list)
+        info_list = [PharmNews(info) for info in info_list]
         return self.dic(info_list)
+
+    def abstract(self, a_tags):
+        info_list = []
+        for tag in a_tags:
+            if tag.text != "こちら":
+                href = tag.get("href")
+                if (href[0:4] == "http") and (href.split("/")[2] != "www.tohoku.ac.jp"):
+                    info_list.append(tag)
+        return info_list
 
 
 ### 工学部・工学研究科 ###
