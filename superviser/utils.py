@@ -58,10 +58,13 @@ class Site:
         return soup
 
     def dic(self, info_list=[]):
+        tmp = datetime.datetime.strptime("2020年2月1日", "%Y年%m月%d日")
+        limit_date = datetime.date(tmp.year, tmp.month, tmp.day)
         info_list = sorted(info_list, key=lambda x:x.time, reverse=True)
         data = defaultdict(list)
         for item in info_list:
-            data[item.time].append(item.content)
+            if item.time >= limit_date:
+                data[item.time].append(item.content)
         return data
 
     def update(self):
@@ -95,10 +98,11 @@ class Site:
         print("データベースを読み込み中...")
         if os.path.exists(self.path):
             with open(self.path, 'rb') as f:
-                data = defaultdict(list)
-                data_row = pickle.load(f)
-                for d in data_row:
-                    data[d[0]] = d[1]
+                #ata = defaultdict(list)
+                #data_row = pickle.load(f)
+                #for d in data_row:
+                #    data[d[0]] = d[1]
+                data = pickle.load(f)
                 print("Done!")
             return data
         else:
@@ -131,8 +135,9 @@ class Superviser:
                             "公式サイトもご確認ください。", obj.url,
                             "="*15]
                 for v in result.values():
-                    for info in v:
-                        contents.append(info)
+                    if len(v) > 0:
+                        for info in v:
+                            contents.append(info)
                 message = "\n".join(contents)
                 ## line api, push message
                 for major in obj.major:
