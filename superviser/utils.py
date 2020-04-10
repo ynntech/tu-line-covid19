@@ -169,4 +169,6 @@ class Superviser:
         requests.post(f"{self.heroku_domain}/push", json=json.dump(data))
 
     def knock(self):
+        print("定期接続確認...")
         requests.get(f"{self.heroku_domain}/remind")
+        print("Done")
