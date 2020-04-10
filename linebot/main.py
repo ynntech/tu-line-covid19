@@ -76,7 +76,7 @@ def handle_message(event):
         userid = event.source.user_id
         userid_df = pd.read_csv("userid.csv", encoding="cp932")
         print(userid_df)
-        target_department = userid_df.loc[userid_df["userid"]==userid]["department"].values[0]
+        department = userid_df.loc[userid_df["userid"]==userid]["department"].values[0]
         line_bot_api.reply_message(event.reply_token,[TextSendMessage(text=info.now("全学生向け")),
                                                     TextSendMessage(text=info.now(department))])
     else:
