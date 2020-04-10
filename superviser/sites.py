@@ -603,27 +603,32 @@ class ISNews(News):
     ## this should be overrided
     ## because the format of news will be different from the others
     def summary(self):
-        self.time = self.tag.find("p").text.split(" | ")[-1]
-        a_tags = self.tag.find_all("a")
-        contents = "".join(self.tag.text.split(" | " + self.time))
-        links = []
-        for i in range(len(a_tags)):
-            href = a_tags[i].get("href")
-            if href[0:4] != "http":
-                href = self.base_url + href
-            links.append(href)
-        self.content = contents + "\n".join(links)
+        split_text = self.tag.text.split("（")
+        time = re.search("\d+.\d+.\d+", split_text[-1]).group()
+        contents = "（".join(split_text[:-1])
+        href = self.tag.get("href")
+        if href[0:4] != "http":
+            href = self.base_url + href
+        self.content = f"《{time}》\n{contents}\n{href}"
+        self.time = self.timeobj(time)
+
+    def timeobj(self, timestr=""):
+        tmp = datetime.datetime.strptime(timestr, "%Y.%m.%d")
+        return datetime.date(tmp.year, tmp.month, tmp.day)
 
 class IS(Site):
     path = os.path.join("..", os.path.join("sites_db", "is.pickle"))
     url = "https://www.is.tohoku.ac.jp/jp/forstudents/detail---id-2986.html"
-    base_url = "https://www.is.tohoku.ac.jp"
+    base_url = "https://www.is.tohoku.ac.jp/"
     major = ["情報科学研究科"]
 
     def get(self):
         soup = self.request()
         ## 以降、サイトに合わせて書き直す必要あり
-        info_list = soup.find(id="news-article-single").find_all("li")
+        info_list = []
+        boxes = soup.find_all("ul", class_="border")
+        for box in boxes:
+            info_list.extend(box.find_all("a"))
         info_list = [ISNews(info, self.base_url) for info in info_list]
         return self.dic(info_list)
 
@@ -681,16 +686,22 @@ class KankyoNews(News):
     ## this should be overrided
     ## because the format of news will be different from the others
     def summary(self):
-        self.time = self.tag.find("p").text.split(" | ")[-1]
+        time = self.tag.find("p").text.split(" | ")[-1]
         a_tags = self.tag.find_all("a")
-        contents = "".join(self.tag.text.split(" | " + self.time))
+        contents = self.tag.text.split(" | " + time)[-1].split("\r")[0]
         links = []
         for i in range(len(a_tags)):
             href = a_tags[i].get("href")
             if href[0:4] != "http":
                 href = self.base_url + href
             links.append(href)
-        self.content = contents + "\n".join(links)
+            links = "\n".join(links)
+        self.content = f"《{time}》{contents}\n{links}"
+        self.time = self.timeobj(time)
+
+    def timeobj(self, timestr=""):
+        tmp = datetime.datetime.strptime(timestr, "%Y/%m/%d")
+        return datetime.date(tmp.year, tmp.month, tmp.day)
 
 class Kankyo(Site):
     path = os.path.join("..", os.path.join("sites_db", "kankyo.pickle"))
@@ -727,8 +738,12 @@ class BmeNews(News):
             href = content[i].find("a").get("href")
             links.append(href)
             contents.append(content[i].text)
-        self.time = time
+        self.time = self.timeobj(time)
         self.content = " ".join(contents) + "\n" + "\n".join(links)
+
+    def timeobj(self, timestr=""):
+        tmp = datetime.datetime.strptime(timestr, "%Y年%m月%d日")
+        return datetime.date(tmp.year, tmp.month, tmp.day)
 
 class Bme(Site):
     path = os.path.join("..", os.path.join("sites_db", "bme.pickle"))
