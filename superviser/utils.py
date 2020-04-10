@@ -1,17 +1,13 @@
 #-*- coding: utf-8 -*-
 import os
-import sys
 import time
+import json
 import pickle
 import requests
 import datetime
 import schedule
 from bs4 import BeautifulSoup
 from collections import defaultdict
-
-sys.path.append(os.path.abspath(os.path.join("..", "linebot")))
-
-from push_message import push_message
 
 
 class News:
@@ -121,10 +117,12 @@ class Site:
 class Superviser:
     def __init__(self, targets=[], timers=[]):
         self.slack_webhook_url = os.environ["SLACK_WEBHOOK_URL"]
+        self.heroku_domain = os.environ["HEROKU_DOMAIN"]
         self._targets = targets
         self._timers = timers
         for timer in timers:
             schedule.every().day.at(timer).do(self.call)
+        schedule.every(20).minutes.do(self.knock)
         self.call(post=False)
 
     def call(self, post=True):
@@ -145,7 +143,7 @@ class Superviser:
                     for major in obj.major:
                         print(major, contents)
                         if post:
-                            push_message(message=message, major=major)
+                            self.push(message=message, major=major)
             except:
                 error_text = "{}のサイトで正常にデータ更新できなかったぞ！".format(obj.major[0])
                 requests.post(self.slack_webhook_url, data = json.dumps({'text':error_text}))
@@ -164,3 +162,11 @@ class Superviser:
     @property
     def timers(self):
         return "\n".join(self._timers)
+
+    ### line bot apiとの連携用
+    def push(self, message, major, subject="false"):
+        data = {"message":message, "major":major, "subject":subject}
+        requests.post(f"{self.heroku_domain}/push", json=json.dump(data))
+
+    def knock(self):
+        requests.get(f"{self.heroku_domain}/remind")

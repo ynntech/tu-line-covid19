@@ -2,7 +2,7 @@ import os
 import errno
 import tempfile
 from random import sample
-from flask import Flask, request, abort
+from flask import Flask, request, abort, jsonify
 from linebot import (
     LineBotApi, WebhookHandler
 )
@@ -26,10 +26,8 @@ from linebot.models import (
 )
 import pandas as pd
 import numpy as np
-from info import Info
 
 app = Flask(__name__)
-info = Info()
 
 LINE_CHANNEL_ACCESS_TOKEN = os.environ["LINE_CHANNEL_ACCESS_TOKEN"]
 LINE_CHANNEL_SECRET = os.environ["LINE_CHANNEL_SECRET"]
@@ -44,6 +42,33 @@ major_dic = {"文学部":["人文社会学科"], "教育学部":["教育科学�
             "農学部":["生物生産科学科","応用生物化学科"], "文学研究科":None, "教育学研究科":None, "法学研究科":None,\
             "経済学研究科":None, "理学研究科":None, "医学系研究科":None, "歯学研究科":None, "薬学研究科":None, "工学研究科":None,\
             "農学研究科":None, "国際文化研究科":None, "情報科学研究科":None, "生命科学研究科":None, "環境科学研究科":None, "医工学研究科":None}
+
+### scraping apiと連携用コード
+import requests
+from push_message import push_message
+
+headers = {"content-type": "application/json"}
+url = os.environ["WEB_SERVER_DOMAIN"]
+
+def now_info(major):
+    url = f"{url}/request/now/{major}"
+    response = requests.get(url, headers=headers)
+    return response.json()["response"]
+
+@app.route("/push", methods=['POST'])
+def push():
+    try:
+        data = request.get_json()
+        subject = True if data["subject"] == "true" else False
+        push_message(data["message"], data["major"], subject)
+        return jsonify({"status":"200"})
+    except:
+        abort(400)
+
+@app.route("/remind", methods=['GET'])
+def remind():
+    return jsonify({"status":"200"})
+
 
 @app.route("/callback", methods=['POST'])
 def callback():
@@ -76,12 +101,12 @@ def handle_message(event):
         userid = event.source.user_id
         userid_df = pd.read_csv("userid.csv", encoding="cp932")
         department = userid_df.loc[userid_df["userid"]==userid]["department"].values[0]
-        
-        information_all = info.now("全学生向け").split("\n&&&\n")
-        information_dep = info.now(department).split("\n&&&\n")
+
+        information_all = now_info("全学生向け").split("\n&&&\n")
+        information_dep = now_info(department).split("\n&&&\n")
         TextSendMessages_all = [TextSendMessage(text=info_) for info_ in information_all]
         TextSendMessages_dep = [TextSendMessage(text=info_) for info_ in information_dep]
-        TextSendMessages_all.extend(TextSendMessages_dep) 
+        TextSendMessages_all.extend(TextSendMessages_dep)
         line_bot_api.reply_message(event.reply_token, TextSendMessages_all)
     else:
         line_bot_api.reply_message(event.reply_token,[TextSendMessage(text=text)])
@@ -98,7 +123,7 @@ def handle_follow(event):
                 items=[QuickReplyButton(action=PostbackAction(label="学部生", data="学部生")),
                             QuickReplyButton(action=PostbackAction(label="院生", data="院生"))]
             ))]) # QuickReplyというリッチメッセージが起動してPostbackEventを発生させる
-    
+
 # Postbackを受け取る
 @handler.add(PostbackEvent)
 def handle_postback(event):
@@ -160,11 +185,11 @@ def handle_postback(event):
         newid.to_csv("userid.csv", encoding="cp932", index=False, mode="a", header=False)
 
         # 登録した所属の最新情報を送信
-        information_all = info.now("全学生向け").split("\n&&&\n")
-        information_dep = info.now(department).split("\n&&&\n")
+        information_all = now_info("全学生向け").split("\n&&&\n")
+        information_dep = now_info(department).split("\n&&&\n")
         TextSendMessages_all = [TextSendMessage(text=info_) for info_ in information_all]
         TextSendMessages_dep = [TextSendMessage(text=info_) for info_ in information_dep]
-        TextSendMessages_all.extend(TextSendMessages_dep) 
+        TextSendMessages_all.extend(TextSendMessages_dep)
         line_bot_api.reply_message(event.reply_token, TextSendMessages_all)
 
 # ブロックされたときにuserid辞書からユーザーのidを削除
