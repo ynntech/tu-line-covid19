@@ -120,6 +120,7 @@ class Site:
 
 class Superviser:
     def __init__(self, targets=[], timers=[]):
+        self.slack_webhook_url = os.environ["SLACK_WEBHOOK_URL"]
         self._targets = targets
         self._timers = timers
         for timer in timers:
@@ -129,21 +130,25 @@ class Superviser:
     def call(self, post=True):
         print("定期実行中")
         for obj in self._targets:
-            result = obj.new
-            if result is not None:
-                contents = ["新規情報があります。",
-                            "公式サイトもご確認ください。", obj.url,
-                            "="*15]
-                for v in result.values():
-                    if len(v) > 0:
-                        for info in v:
-                            contents.append(info)
-                message = "\n".join(contents)
-                ## line api, push message
-                for major in obj.major:
-                    print(major, contents)
-                    if post:
-                        push_message(message=message, major=major)
+            try:
+                result = obj.new
+                if result is not None:
+                    contents = ["新規情報があります。",
+                                "公式サイトもご確認ください。", obj.url,
+                                "="*15]
+                    for v in result.values():
+                        if len(v) > 0:
+                            for info in v:
+                                contents.append(info)
+                    message = "\n".join(contents)
+                    ## line api, push message
+                    for major in obj.major:
+                        print(major, contents)
+                        if post:
+                            push_message(message=message, major=major)
+            except:
+                error_text = "{}のサイトで正常にデータ更新できなかったぞ！".format(obj.major[0])
+                requests.post(self.slack_webhook_url, data = json.dumps({'text':error_text}))
 
     def run(self):
         while True:
