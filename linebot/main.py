@@ -127,6 +127,21 @@ def handle_message(event):
         TextSendMessages_dep = [TextSendMessage(text=info_) for info_ in information_dep]
         TextSendMessages_all.extend(TextSendMessages_dep)
         line_bot_api.reply_message(event.reply_token, TextSendMessages_all)
+
+    if text =="再登録":
+        userid = event.source.user_id
+        del_userid(userid) # user情報を削除
+
+        line_bot_api.reply_message(
+            event.reply_token,
+            [TextSendMessage(text="現在登録されていた学部、研究科は削除されました。"),
+            TextSendMessage(
+            text="もう一度下のボタンから学部生か院生かを選択し、その後学部または研究科を選択してください。",
+            quick_reply=QuickReply(
+                items=[QuickReplyButton(action=PostbackAction(label="学部生", data="学部生")),
+                            QuickReplyButton(action=PostbackAction(label="院生", data="院生"))]
+            ))])
+
     else:
         line_bot_api.reply_message(event.reply_token,[TextSendMessage(text=text)])
 
@@ -137,7 +152,7 @@ def handle_follow(event):
             event.reply_token,
             [TextSendMessage(text="友だち追加ありがとうございます。\n\n登録した学部・研究科と、全学生向けのコロナウイルス関連のサイト掲載情報を配信します。\n\n概要・免責事項等は当アカウントのタイムライン投稿をご覧ください。"),
             TextSendMessage(
-            text="下のボタンから学部生か院生かを選択し、その後学部または研究科を選択してください。\n\n登録を誤った際は、登画面下部のメニューバーより登録をやり直すことができます。",
+            text="下のボタンから学部生か院生かを選択し、その後学部または研究科を選択してください。\n\n間違えて登録した際は、登画面下部のメニューバーより登録をやり直すことができます。",
             quick_reply=QuickReply(
                 items=[QuickReplyButton(action=PostbackAction(label="学部生", data="学部生")),
                             QuickReplyButton(action=PostbackAction(label="院生", data="院生"))]
