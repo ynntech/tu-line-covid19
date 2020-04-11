@@ -184,12 +184,14 @@ def handle_postback(event):
         newid.to_csv("userid.csv", encoding="cp932", index=False, mode="a", header=False)
 
         # 登録した所属の最新情報を送信
+        TextSendMessages = [TextSendMessage(text="{} {}で登録しました".format(department, subject))]
         information_all = now_info("全学生向け").split("\n&&&\n")
         information_dep = now_info(department).split("\n&&&\n")
         TextSendMessages_all = [TextSendMessage(text=info_) for info_ in information_all]
         TextSendMessages_dep = [TextSendMessage(text=info_) for info_ in information_dep]
-        TextSendMessages_all.extend(TextSendMessages_dep)
-        line_bot_api.reply_message(event.reply_token, TextSendMessages_all)
+        TextSendMessages.extend(TextSendMessages_all)
+        TextSendMessages.extend(TextSendMessages_dep)
+        line_bot_api.reply_message(event.reply_token, TextSendMessages)
 
 # ブロックされたときにuserid辞書からユーザーのidを削除
 @handler.add(UnfollowEvent)
