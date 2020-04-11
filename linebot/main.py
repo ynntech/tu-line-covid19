@@ -115,9 +115,9 @@ def handle_message(event):
 def handle_follow(event):
     line_bot_api.reply_message(
             event.reply_token,
-            [TextSendMessage(text="友だち追加ありがとうございます。\n\n登録した学部・研究科と、全学生向けのコロナウイルス関連のサイト掲載情報を配信します。\n\n概要・免責事項等は当LINEbotのタイムライン投稿をご覧ください。"),
+            [TextSendMessage(text="友だち追加ありがとうございます。\n\n登録した学部・研究科と、全学生向けのコロナウイルス関連のサイト掲載情報を配信します。\n\n概要・免責事項等は当アカウントのタイムライン投稿をご覧ください。"),
             TextSendMessage(
-            text="下のボタンから学部生か院生かを選択し、その後学部または研究科を選択してください。\n\n登録し直す場合は一度このLINEbotをブロックし、その後ブロック解除してください。",
+            text="下のボタンから学部生か院生かを選択し、その後学部または研究科を選択してください。\n\n登録し直す場合は一度当アカウントをブロックし、その後ブロック解除してください。",
             quick_reply=QuickReply(
                 items=[QuickReplyButton(action=PostbackAction(label="学部生", data="学部生")),
                             QuickReplyButton(action=PostbackAction(label="院生", data="院生"))]
