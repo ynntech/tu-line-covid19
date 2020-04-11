@@ -204,7 +204,7 @@ def handle_postback(event):
                 )))
 
     # 所属が選択された後、所属とuseridをcsvに追記
-    elif event.postback.data[-1] == "科" or event.postback.data[-1] == "系" or event.postback.data == "未定":
+    elif event.postback.data[-1] == "科" or event.postback.data[-1] == "系" or event.postback.data[-2:] == "未定":
         user_major = event.postback.data
         userid = event.source.user_id
 
