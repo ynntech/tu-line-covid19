@@ -61,6 +61,7 @@ major_dic = {"学部生":{"文学部":["人文社会学科"],
                     "公共政策大学院",
                     "会計大学院"]}
 
+
 ### scraping apiと連携用コード
 import json
 import requests
@@ -135,16 +136,11 @@ def handle_follow(event):
     line_bot_api.reply_message(
             event.reply_token,
             [TextSendMessage(text="友だち追加ありがとうございます。\n\n登録した学部・研究科と、全学生向けのコロナウイルス関連のサイト掲載情報を配信します。\n\n概要・免責事項等は当アカウントのタイムライン投稿をご覧ください。"),
-            TextSendMessage(text="下のボタンから学部生か院生かを選択し、その後学部または研究科を選択してください。\n\n登録を誤った際は、登画面下部のメニューバーより登録をやり直すことができます。",
-                            quick_reply=QuickReply(
-                                    items=[QuickReplyButton(
-                                            action=PostbackAction(
-                                                    label="学部生",
-                                                    data="学部生")),
-                                           QuickReplyButton(
-                                            action=PostbackAction(
-                                                    label="院生",
-                                                    data="院生"))]
+            TextSendMessage(
+            text="下のボタンから学部生か院生かを選択し、その後学部または研究科を選択してください。\n\n登録を誤った際は、登画面下部のメニューバーより登録をやり直すことができます。",
+            quick_reply=QuickReply(
+                items=[QuickReplyButton(action=PostbackAction(label="学部生", data="学部生")),
+                            QuickReplyButton(action=PostbackAction(label="院生", data="院生"))]
             ))]) # QuickReplyというリッチメッセージが起動してPostbackEventを発生させる
 
 # Postbackを受け取る
@@ -226,3 +222,5 @@ def handle_unfollow(event):
 
 if __name__ ==  "__main__":
     app.run(host="0.0.0.0", port=8000)
+    # app.debug = True
+    # app.run()
