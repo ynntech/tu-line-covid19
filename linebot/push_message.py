@@ -2,7 +2,7 @@ from linebot import LineBotApi
 from linebot.models import TextSendMessage
 from linebot.exceptions import LineBotApiError
 import os
-import pandas as pd
+from userid_db import search_userid
 
 LINE_CHANNEL_ACCESS_TOKEN = os.environ["LINE_CHANNEL_ACCESS_TOKEN"]
 line_bot_api = LineBotApi(LINE_CHANNEL_ACCESS_TOKEN)
@@ -16,22 +16,17 @@ def push_message(message, user_majors, subject=False):
     ==Return==
         None
     """
-    userid_df = pd.read_csv("userid.csv", encoding="cp932")
     for user_major in user_majors: #学部，研究科がリストで渡されるため対応
-        if user_major == "全学生向け":
-            target_ids = userid_df["userid"]
+        if subject: # subjectがTrueのときは学科で送信先のユーザを指定
+            target_ids = search_userid(user_major, True) #対象学科のuseridのリストを取得
         else:
-            if subject: # subjectがTrueのときは学科で送信先のユーザを指定
-                key_major = "subject"
-            else:
-                key_major = "department"
-            target_ids = userid_df.loc[userid_df[key_major]==user_major]["userid"] #対象学部のuseridのリストを取得
+            target_ids = search_userid(user_major) # 対象学部、または全てのuseridのリストを取得
 
         for userid in target_ids:
             try:                            #メッセージを送信したい相手のIDを入力
-                line_bot_api.push_message(userid, TextSendMessage(text=message))
+                line_bot_api.push_message(userid[0], TextSendMessage(text=message))
             except LineBotApiError as e:
-                print("error!")
+                print("error") #DBの1列目にダミーのuseridがあるので全学生向けにpushするたびに一回エラーが発生する
 
 
 if __name__ == "__main__":

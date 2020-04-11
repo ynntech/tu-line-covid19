@@ -1,7 +1,4 @@
 import os
-import errno
-import tempfile
-from random import sample
 from flask import Flask, request, abort, jsonify
 from linebot import (
     LineBotApi, WebhookHandler
@@ -24,8 +21,7 @@ from linebot.models import (
     TextComponent, SpacerComponent, IconComponent, ButtonComponent,
     SeparatorComponent, QuickReply, QuickReplyButton
 )
-import pandas as pd
-import numpy as np
+from userid_db import del_userid, add_userid, get_usermajor
 
 app = Flask(__name__)
 
@@ -35,36 +31,6 @@ line_bot_api = LineBotApi(LINE_CHANNEL_ACCESS_TOKEN)
 handler = WebhookHandler(LINE_CHANNEL_SECRET)
 
 #QuickReplyで表示する選択肢たち
-major_dic = {"文学部":["人文社会学科"],
-             "教育学部":["教育科学科"],
-             "法学部":["法学科"],
-             "経済学部":["経済学科", "経営学科", "未定"],
-             "理学部":["数学系","物理系","化学系", "地球科学系","生物系"],
-             "医学部":["医学科", "保健学科"],
-             "歯学部":["歯学科"],
-             "薬学部":["薬学科", "創薬科学科", "未定"],
-             "工学部":["機械知能・航空工学科", "電気情報物理工学科", "化学・バイオ工学科",
-                      "材料科学総合学科", "建築・社会環境工学科"],
-             "農学部":["生物生産科学科", "応用生物化学科", "未定"],
-             "文学研究科":None,
-             "教育学研究科":None,
-             "法学研究科":None,
-             "経済学研究科":None,
-             "理学研究科":None,
-             "医学系研究科":None,
-             "歯学研究科":None,
-             "薬学研究科":None,
-             "工学研究科":None,
-             "農学研究科":None,
-             "国際文化研究科":None,
-             "情報科学研究科":None,
-             "生命科学研究科":None,
-             "環境科学研究科":None,
-             "医工学研究科":None,
-             "法科大学院":None,
-             "公共政策大学院":None,
-             "会計大学院":None}
-'''
 major_dic = {"学部生":{"文学部":["人文社会学科"],
                       "教育学部":["教育科学科"],
                       "法学部":["法学科"],
@@ -93,7 +59,7 @@ major_dic = {"学部生":{"文学部":["人文社会学科"],
                     "医工学研究科",
                     "法科大学院",
                     "公共政策大学院",
-                    "会計大学院"]}'''
+                    "会計大学院"]}
 
 ### scraping apiと連携用コード
 import json
@@ -152,8 +118,7 @@ def handle_message(event):
 
     if text == "最新情報":
         userid = event.source.user_id
-        userid_df = pd.read_csv("userid.csv", encoding="cp932")
-        department = userid_df.loc[userid_df["userid"]==userid]["department"].values[0]
+        department = get_usermajor(userid) # ユーザーのdepartmentを取得
 
         information_all = now_info("全学生向け").split("\n&&&\n")
         information_dep = now_info(department).split("\n&&&\n")
@@ -191,19 +156,11 @@ def handle_postback(event):
             TextSendMessage(
                 text='下のボタンをスワイプして学部を選択してください。',
                 quick_reply=QuickReply(
-                    items=[QuickReplyButton(action=PostbackAction(label=department, data=department)) for department in list(major_dic.keys())[:10]]
+                    items=[QuickReplyButton(action=PostbackAction(label=department, data=department)) for department in major_dic["学部生"].keys()]
                 )))
-        #line_bot_api.reply_message(
-        #    event.reply_token,
-        #    TextSendMessage(
-        #        text='下のボタンをスワイプして学部を選択してください。',
-        #        quick_reply=QuickReply(
-        #            items=[QuickReplyButton(action=PostbackAction(label=department, data=department)) for department in major_dic["学部生"].keys()]
-        #        )))
 
     elif event.postback.data == "院生" or event.postback.data == "ひとつ前に戻る":
-        items = [QuickReplyButton(action=PostbackAction(label=department, data=department)) for department in list(major_dic.keys())[10:17]]
-        #items = [QuickReplyButton(action=PostbackAction(label=department, data=department)) for department in major_dic["院生"][:9]]
+        items = [QuickReplyButton(action=PostbackAction(label=department, data=department)) for department in major_dic["院生"][:9]]
         items.append(QuickReplyButton(action=PostbackAction(label="さらに表示する", data="さらに表示する")))
         line_bot_api.reply_message(
             event.reply_token,
@@ -214,8 +171,7 @@ def handle_postback(event):
                 )))
 
     elif event.postback.data == "さらに表示する":  # 『さらに表示する』が押されたら残りの所属を表示する
-        items = [QuickReplyButton(action=PostbackAction(label=department, data=department)) for department in list(major_dic.keys())[17:]]
-        #items = [QuickReplyButton(action=PostbackAction(label=department, data=department)) for department in major_dic["院生"][9:]]
+        items = [QuickReplyButton(action=PostbackAction(label=department, data=department)) for department in major_dic["院生"][9:]]
         items.append(QuickReplyButton(action=PostbackAction(label="ひとつ前に戻る", data="ひとつ前に戻る")))
         line_bot_api.reply_message(
             event.reply_token,
@@ -248,8 +204,8 @@ def handle_postback(event):
             department = user_major.split(" ")[0]
             subject = user_major.split(" ")[1]
 
-        newid = pd.DataFrame([department, subject, userid], index=["department", "subject", "user_id"]).T
-        newid.to_csv("userid.csv", encoding="cp932", index=False, mode="a", header=False)
+        # ユーザー情報をDBに追記
+        add_userid(department, subject, userid)
 
         # 登録した所属の最新情報を送信
         TextSendMessages = [TextSendMessage(text="{} {}で登録しました".format(department, subject))]
@@ -261,13 +217,11 @@ def handle_postback(event):
         TextSendMessages.extend(TextSendMessages_dep)
         line_bot_api.reply_message(event.reply_token, TextSendMessages)
 
-# ブロックされたときにuserid辞書からユーザーのidを削除
+# ブロックされたときにDBからユーザー情報を削除
 @handler.add(UnfollowEvent)
 def handle_unfollow(event):
     userid = event.source.user_id
-    userid_df = pd.read_csv("userid.csv", encoding="cp932")
-    userid_df.drop(index=userid_df.index[np.where(userid_df["userid"]==userid)], inplace=True)
-    userid_df.to_csv("userid.csv", encoding="cp932", index=False)
+    del_userid(userid)
 
 
 if __name__ ==  "__main__":
