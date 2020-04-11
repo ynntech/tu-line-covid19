@@ -14,7 +14,9 @@ info = Info()
 # 最新情報の取得API
 @app.route("/request/now", methods=["POST"])
 def recipe_request():
-    data = json.loads(request.get_json())
+    data = request.get_json()
+    if type(data) != dict:
+        data = json.loads(data)
     major = data["major"]
     if major in info.major_index:
         return jsonify({
@@ -27,6 +29,8 @@ def recipe_request():
 @app.route("/test/post", methods=["POST"])
 def test_post():
     data = request.get_json()
+    if type(data) != dict:
+        data = json.loads(data)
     return jsonify({
                     "status":"200",
                     "response":data

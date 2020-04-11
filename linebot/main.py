@@ -58,6 +58,8 @@ def now_info(major):
 def push():
     try:
         data = request.get_json()
+        if type(data) != dict:
+            data = json.loads(data)
         subject = True if data["subject"] == "true" else False
         push_message(data["message"], data["major"], subject)
         return jsonify({"status":"200"})

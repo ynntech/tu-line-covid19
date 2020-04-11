@@ -123,7 +123,6 @@ class Superviser:
         for timer in timers:
             schedule.every().day.at(timer).do(self.call)
         schedule.every(20).minutes.do(self.knock)
-        self.call(post=False)
 
     def call(self, post=True):
         print("定期実行中")
@@ -140,10 +139,8 @@ class Superviser:
                                 contents.append(info)
                     message = "\n".join(contents)
                     ## line api, push message
-                    for major in obj.major:
-                        print(major, contents)
-                        if post:
-                            self.push(message=message, major=major)
+                    print(obj.major, contents)
+                    self.push(message=message, majors=obj.major)
             except:
                 error_text = "{}のサイトで正常にデータ更新できなかったぞ！".format(obj.major[0])
                 requests.post(self.slack_webhook_url, data = json.dumps({'text':error_text}))
@@ -164,11 +161,11 @@ class Superviser:
         return "\n".join(self._timers)
 
     ### line bot apiとの連携用
-    def push(self, message, major, subject="false"):
-        data = {"message":message, "major":major, "subject":subject}
+    def push(self, message, majors, subject="false"):
+        data = {"message":message, "major":majors, "subject":subject}
         requests.post(f"{self.heroku_domain}/push", json=json.dump(data))
 
     def knock(self):
         print("定期接続確認...")
         res = requests.get(f"{self.heroku_domain}/remind")
-        print(f"Reslut: {res.get_json()}")
+        print(res)
