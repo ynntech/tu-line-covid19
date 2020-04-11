@@ -53,7 +53,7 @@ url = os.environ["WEB_SERVER_DOMAIN"]
 def now_info(major):
     data = {"major":major}
     url = f"{url}/request/now"
-    response = requests.post(url. json=json.dumps(data))
+    response = requests.post(url, json=json.dumps(data))
     return response.json()["response"]
 
 @app.route("/push", methods=['POST'])
