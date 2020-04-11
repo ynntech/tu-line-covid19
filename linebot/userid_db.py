@@ -1,4 +1,3 @@
-from sqlalchemy import create_engine
 import psycopg2
 import psycopg2.extras
 import os

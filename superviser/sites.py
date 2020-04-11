@@ -36,7 +36,7 @@ class TU(Site):
     path = os.path.join("..", os.path.join("sites_db", "tu.pickle"))
     url = "http://www.tohoku.ac.jp/japanese/disaster/outbreak/01/outbreak0101/"
     base_url = "http://www.tohoku.ac.jp"
-    major = ["全学生向け"]
+    majors = ["全学生向け"]
 
     def get(self):
         soup = self.request()
@@ -75,14 +75,6 @@ class TU(Site):
 
 ### 文学部・文学研究科 ###
 class SalNews(News):
-    def __init__(self, tag):
-        '''
-        <parameter>
-        tag (bs4.element.Tag) : single topic object
-        '''
-        self.tag = tag
-        self.summary()
-
     ## this should be overrided
     ## because the format of news will be different from the others
     def summary(self):
@@ -98,7 +90,7 @@ class Sal(Site):
     path = os.path.join("..", os.path.join("sites_db", "sal.pickle"))
     url = "https://www.sal.tohoku.ac.jp/jp/news/covid19.html"
     base_url = "https://www.sal.tohoku.ac.jp/"
-    major = ["文学部", "文学研究科"]
+    majors = ["文学部", "文学研究科"]
 
     def get(self):
         soup = self.request()
@@ -160,7 +152,7 @@ class Sed(Site):
     path = os.path.join("..", os.path.join("sites_db", "sed.pickle"))
     url = "https://www.sed.tohoku.ac.jp/news.html"
     base_url = "https://www.sed.tohoku.ac.jp"
-    major = ["教育学部", "教育学研究科"]
+    majors = ["教育学部", "教育学研究科"]
 
     def get(self):
         soup = self.request()
@@ -170,7 +162,7 @@ class Sed(Site):
         return self.dic(info_list)
 
 
-### 法学部・法学研究科 ###
+### 法学部・法学研究科/法科大学院・公共政策大学院 ###
 class LawNews:
     def __init__(self):
         self.time = ""
@@ -185,7 +177,7 @@ class Law(Site):
     path = os.path.join("..", os.path.join("sites_db", "law.pickle"))
     url = "http://www.law.tohoku.ac.jp/covid19/"
     base_url = "http://www.law.tohoku.ac.jp"
-    major = ["法学部", "法学研究科"]
+    majors = ["法学部", "法学研究科", "法科大学院", "公共政策大学院"]
 
     def get(self):
         soup = self.request()
@@ -199,7 +191,7 @@ class Law(Site):
         return self.dic(info_list)
 
 
-### 経済学部・経済学研究科 ###
+### 経済学部・経済学研究科/会計大学院 ###
 class EconNews:
     def __init__(self, data):
         self.data = data
@@ -222,7 +214,7 @@ class Econ(Site):
     path = os.path.join("..", os.path.join("sites_db", "econ.pickle"))
     ### ここは特例でGoogle documentやで。頑張ろうな
     url = "https://docs.google.com/document/d/19ArkoemdFSNdgeF0XQO8mI3QNhjkUbXp2lrewNGh1qQ/edit"
-    major = ["経済学部", "経済学研究科"]
+    majors = ["経済学部", "経済学研究科", "会計大学院"]
 
     def get(self):
         soup = self.request()
@@ -242,14 +234,6 @@ class Econ(Site):
 
 ### 理学部・理学研究科 ###
 class SciNews(News):
-    def __init__(self, tag):
-        '''
-        <parameter>
-        tag (bs4.element.Tag) : single topic object
-        '''
-        self.tag = tag
-        self.summary()
-
     ## this should be overrided
     ## because the format of news will be different from the others
     def summary(self):
@@ -267,13 +251,13 @@ class SciNews(News):
 class Sci(Site):
     path = os.path.join("..", os.path.join("sites_db", "sci.pickle"))
     url = "https://www.sci.tohoku.ac.jp/news/20200305-10978.html"
-    major = ["理学部", "理学研究科"]
+    majors = ["理学部", "理学研究科"]
 
     def get(self):
         soup = self.request()
         ## 以降、サイトに合わせて書き直す必要あり
         li_blocks = soup.find("ul", id="localNav").find_all("li")
-        info_list1, ex = self.abstract(li_block=li_blocks[2])
+        info_list1, ex = self.abstract(li_block=li_blocks[2], exception=[])
         info_list2, ex = self.abstract(li_block=li_blocks[3], exception=ex)
         info_list3, ex = self.abstract(li_block=li_blocks[4], exception=ex)
         info_list = info_list1 + info_list2 + info_list3
@@ -328,7 +312,7 @@ class MedNews(News):
 class Med(Site):
     path = os.path.join("..", os.path.join("sites_db", "med.pickle"))
     url = "https://www.med.tohoku.ac.jp/admissions/2003announce/index.html"
-    major = ["医学部", "医学系研究科"]
+    majors = ["医学部", "医学系研究科"]
 
     def get(self):
         soup = self.request()
@@ -370,7 +354,7 @@ class Dent(Site):
     path = os.path.join("..", os.path.join("sites_db", "dent.pickle"))
     url = "http://www.dent.tohoku.ac.jp/important/202003.html"
     base_url = "http://www.dent.tohoku.ac.jp/important"
-    major = ["歯学部", "歯学研究科"]
+    majors = ["歯学部", "歯学研究科"]
 
     def get(self):
         soup = self.request()
@@ -395,14 +379,6 @@ class Dent(Site):
 
 ### 薬学部・薬学研究科 ###
 class PharmNews(News):
-    def __init__(self, tag):
-        '''
-        <parameter>
-        tag (bs4.element.Tag) : single topic object
-        '''
-        self.tag = tag
-        self.summary()
-
     ## this should be overrided
     ## because the format of news will be different from the others
     def summary(self):
@@ -420,7 +396,7 @@ class PharmNews(News):
 class Pharm(Site):
     path = os.path.join("..", os.path.join("sites_db", "pharm.pickle"))
     url = "http://www.pharm.tohoku.ac.jp/info/200331/200331.shtml"
-    major = ["薬学部", "薬学研究科"]
+    majors = ["薬学部", "薬学研究科"]
 
     def get(self):
         soup = self.request()
@@ -485,7 +461,7 @@ class Eng(Site):
     path = os.path.join("..", os.path.join("sites_db", "eng.pickle"))
     url = "https://www.eng.tohoku.ac.jp/news/detail-,-id,1561.html"
     base_url = "https://www.eng.tohoku.ac.jp"
-    major = ["工学部", "工学研究科"]
+    majors = ["工学部", "工学研究科"]
 
     def get(self):
         soup = self.request()
@@ -555,7 +531,7 @@ class Agri(Site):
     path = os.path.join("..", os.path.join("sites_db", "agri.pickle"))
     url = "https://www.agri.tohoku.ac.jp/jp/news/covid-19/"
     base_url = "https://www.agri.tohoku.ac.jp/jp/news/covid-19/"
-    major = ["農学部", "農学研究科"]
+    majors = ["農学部", "農学研究科"]
 
     def get(self):
         soup = self.request()
@@ -567,14 +543,6 @@ class Agri(Site):
 
 ### 国際文化研究科 ###
 class IntculNews(News):
-    def __init__(self, tag):
-        '''
-        <parameter>
-        tag (bs4.element.Tag) : single topic object
-        '''
-        self.tag = tag
-        self.summary()
-
     ## this should be overrided
     ## because the format of news will be different from the others
     def summary(self):
@@ -598,7 +566,7 @@ class IntculNews(News):
 class Intcul(Site):
     path = os.path.join("..", os.path.join("sites_db", "intcul.pickle"))
     url = "http://www.intcul.tohoku.ac.jp/"
-    major = ["国際文化研究科"]
+    majors = ["国際文化研究科"]
 
     def get(self):
         soup = self.request()
@@ -639,7 +607,7 @@ class IS(Site):
     path = os.path.join("..", os.path.join("sites_db", "is.pickle"))
     url = "https://www.is.tohoku.ac.jp/jp/forstudents/detail---id-2986.html"
     base_url = "https://www.is.tohoku.ac.jp/"
-    major = ["情報科学研究科"]
+    majors = ["情報科学研究科"]
 
     def get(self):
         soup = self.request()
@@ -658,14 +626,6 @@ class LifesciNews(News):
                              "April":"4", "Apr":"4", "May":"5", "June":"6", "July":"7", "August":"8", "Aug":"8",
                             "September":"9", "Sept":"9", "October":"10", "Oct":"10", "November":"11", "Nov":"11",
                             "December":"12", "Dec":"12"}
-
-    def __init__(self, tag):
-        '''
-        <parameter>
-        tag (bs4.element.Tag) : single topic object
-        '''
-        self.tag = tag
-        self.summary()
 
     ## this should be overrided
     ## because the format of news will be different from the others
@@ -687,7 +647,7 @@ class LifesciNews(News):
 class Lifesci(Site):
     path = os.path.join("..", os.path.join("sites_db", "lifesci.pickle"))
     url = "https://www.lifesci.tohoku.ac.jp/outline/covid19_taiou/"
-    major = ["生命科学研究科"]
+    majors = ["生命科学研究科"]
 
     def get(self):
         soup = self.request()
@@ -743,7 +703,7 @@ class Kankyo(Site):
     path = os.path.join("..", os.path.join("sites_db", "kankyo.pickle"))
     url = "http://www.kankyo.tohoku.ac.jp/index.html"
     base_url = "http://www.kankyo.tohoku.ac.jp/"
-    major = ["環境科学研究科"]
+    majors = ["環境科学研究科"]
 
     def get(self):
         soup = self.request()
@@ -755,14 +715,6 @@ class Kankyo(Site):
 
 ### 医工学研究科 ###
 class BmeNews(News):
-    def __init__(self, tag):
-        '''
-        <parameter>
-        tag (bs4.element.Tag) : single topic object
-        '''
-        self.tag = tag
-        self.summary()
-
     ## this should be overrided
     ## because the format of news will be different from the others
     def summary(self):
@@ -784,7 +736,7 @@ class BmeNews(News):
 class Bme(Site):
     path = os.path.join("..", os.path.join("sites_db", "bme.pickle"))
     url = "http://www.bme.tohoku.ac.jp/information/news/"
-    major = ["医工学研究科"]
+    majors = ["医工学研究科"]
 
     def get(self):
         soup = self.request()
