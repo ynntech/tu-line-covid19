@@ -48,11 +48,9 @@ import json
 import requests
 from push_message import push_message
 
-url = os.environ["WEB_SERVER_DOMAIN"]
-
 def now_info(major):
     data = {"major":major}
-    url = f"{url}/request/now"
+    url = f"{os.environ['WEB_SERVER_DOMAIN']}/request/now"
     response = requests.post(url, json=json.dumps(data))
     return response.json()["response"]
 
