@@ -1,5 +1,6 @@
 #-*- coding: utf-8 -*-
 import sys
+import json
 from flask import Flask, request, jsonify, abort
 
 from info import Info
@@ -13,7 +14,7 @@ info = Info()
 # 最新情報の取得API
 @app.route("/request/now", methods=["POST"])
 def recipe_request():
-    data = request.get_json()
+    data = json.loads(request.get_json())
     major = data["major"]
     if major in info.major_index:
         return jsonify({
