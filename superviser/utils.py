@@ -30,7 +30,7 @@ class News:
 class Site:
     path = ""
     url = ""
-    major = ""
+    majors = []
 
     def __init__(self):
         self.data = self.read()
@@ -46,7 +46,7 @@ class Site:
         return defaultdict(list)
 
     def request(self):
-        print(f"【{self.major[0]}】接続中...")
+        print(f"【{self.majors[0]}】接続中...")
         response = requests.get(self.url)
         response.encoding = response.apparent_encoding
         soup = BeautifulSoup(response.text, "lxml")
@@ -66,9 +66,10 @@ class Site:
     def update(self):
         pre = self.data.copy()
         post = self.get()
+        diff = self.diff(pre, post)
         self.data = post
         self.write()
-        return self.diff(pre, post)
+        return diff
 
     def diff(self, pre, post):
         print("前回との変更を抽出中...")
@@ -139,15 +140,18 @@ class Superviser:
                                 contents.append(info)
                     message = "\n".join(contents)
                     ## line api, push message
-                    print(obj.major, contents)
-                    self.push(message=message, majors=obj.major)
+                    print(obj.majors, contents)
+                    self.push(message=message, majors=obj.majors)
+                else:
+                    print("更新はありません")
             except:
-                error_text = "{}のサイトで正常にデータ更新できなかったぞ！".format(obj.major[0])
-                requests.post(self.slack_webhook_url, data = json.dumps({'text':error_text}))
+                error_text = "{}のサイトで正常にデータ更新できなかったぞ！\n{}".format(obj.majors[0], obj.url)
+                requests.post(self.slack_webhook_url, data=json.dumps({'text':error_text}))
 
     def run(self):
         while True:
-            now = datetime.datetime.now(datetime.timezone(datetime.timedelta(hours=9)))
+            now = datetime.datetime.now(datetime.timezone(
+                                                datetime.timedelta(hours=9)))
             print(now.strftime('%Y/%m/%d %H:%M:%S'))
             schedule.run_pending()
             time.sleep(60)
@@ -162,10 +166,19 @@ class Superviser:
 
     ### line bot apiとの連携用
     def push(self, message, majors, subject="false"):
-        data = {"message":message, "major":majors, "subject":subject}
+        data = {"message":message, "majors":majors, "subject":subject}
         requests.post(f"{self.heroku_domain}/push", json=json.dump(data))
+        if res.status_code == 200:
+            print(f"{majors}に一斉送信しました")
+        else:
+            error = f"{majors}送信できなかった。。:jobs:＜:ぴえん:"
+            requests.post(self.slack_webhook_url, data=json.dumps({'text':error}))
 
     def knock(self):
         print("定期接続確認...")
         res = requests.get(f"{self.heroku_domain}/remind")
-        print(res)
+        if res.status_code == 200:
+            print("LINE botサーバー生存確認完了")
+        else:
+            error = "LINE botサーバーに問題が生じたぞ！さぁ直すんだ"
+            requests.post(self.slack_webhook_url, data=json.dumps({'text':error}))

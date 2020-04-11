@@ -38,15 +38,17 @@ class Info:
                 "情報科学研究科":["is.pickle", "https://www.is.tohoku.ac.jp/jp/forstudents/detail---id-2986.html"],
                 "生命科学研究科":["lifesci.pickle", "https://www.lifesci.tohoku.ac.jp/outline/covid19_taiou/"],
                 "環境科学研究科":["kankyo.pickle", "http://www.kankyo.tohoku.ac.jp/index.html"],
-                "医工学研究科":["bme.pickle", "http://www.bme.tohoku.ac.jp/information/news/"]}
+                "医工学研究科":["bme.pickle", "http://www.bme.tohoku.ac.jp/information/news/"],
+                "法科大学院":["law.pickle", "http://www.law.tohoku.ac.jp/covid19/"],
+                "公共政策大学院":["law.pickle", "http://www.law.tohoku.ac.jp/covid19/"],
+                "会計大学院":["econ.pickle", "https://sites.google.com/view/rinji-econ-tohoku-ac-jp/"]}
     db_root = os.path.join("..", "sites_db")
 
     def now(self, major):
         path, url = self.major_index[major]
         data = self.read(path=path)
         if data is None:
-            return f"{'='*15}\n{major}に登録された情報はありません。\n公式サイトを\
-                    ご確認ください\n{url}\n{'='*15}"
+            return f"{'='*15}\n{major}に登録された情報はありません。\n公式サイトをご確認ください\n{url}\n{'='*15}"
         else:
             contents = []
             count = 0
@@ -57,8 +59,7 @@ class Info:
                     if count%18==0: # lineメッセージの文字制限のためセパレーター文字列を追加
                         contents.append("&&&")
             if major == "全学生向け":
-                contents.append(f"{'='*15}\n東北大学オンライン授業ガイド\nhttps://\
-                            sites.google.com/view/teleclass-tohoku/forstudents")
+                contents.append(f"{'='*15}\n東北大学オンライン授業ガイド\nhttps://sites.google.com/view/teleclass-tohoku/forstudents")
             contents.append(f"公式サイトもご確認ください\n{url}")
             header = ["="*15, f"{major}に現在登録されている情報は{count}件です。", "="*15]
             print("\n".join(header + contents))

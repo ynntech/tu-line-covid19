@@ -10,8 +10,8 @@ line_bot_api = LineBotApi(LINE_CHANNEL_ACCESS_TOKEN)
 def push_message(message, user_majors, subject=False):
     """
     ==Parameters==
-        message(str)      : ユーザに送りたいメッセージ 
-        user_major(str)   : メッセージを送りたい学部（後々学科まで細分化するかも）
+        message(str)      : ユーザに送りたいメッセージ
+        user_majors(list) : メッセージを送りたい学部リスト（後々学科まで細分化するかも）
         subject(bool)     : Trueのときuser_majorに学科指定
     ==Return==
         None
