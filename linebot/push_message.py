@@ -25,9 +25,9 @@ def push_message(message, user_majors, subject=False):
             
         for userid in target_ids:
             try:                            #メッセージを送信したい相手のIDを入力
-                line_bot_api.push_message(userid, TextSendMessage(text=message))
+                line_bot_api.push_message(userid[0], TextSendMessage(text=message))
             except LineBotApiError as e:
-                print("error!")
+                print("error") #DBの1列目にダミーのuseridがあるので全学生向けにpushするたびに一回エラーが発生する
 
 
 if __name__ == "__main__":
