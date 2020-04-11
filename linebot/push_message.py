@@ -25,7 +25,7 @@ def push_message(message, user_majors, subject=False):
                 key_major = "subject"
             else:
                 key_major = "department"
-            target_ids = userid_df.loc[userid_df[key_major]==user_major]["user_id"] #対象学部のuseridのリストを取得
+            target_ids = userid_df.loc[userid_df[key_major]==user_major]["userid"] #対象学部のuseridのリストを取得
 
         for userid in target_ids:
             try:                            #メッセージを送信したい相手のIDを入力
