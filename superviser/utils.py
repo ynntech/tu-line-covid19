@@ -170,5 +170,5 @@ class Superviser:
 
     def knock(self):
         print("定期接続確認...")
-        requests.get(f"{self.heroku_domain}/remind")
-        print("Done")
+        res = requests.get(f"{self.heroku_domain}/remind")
+        print(f"Reslut: {res.get_json()}")
