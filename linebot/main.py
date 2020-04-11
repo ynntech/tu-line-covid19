@@ -26,6 +26,7 @@ from linebot.models import (
 )
 import pandas as pd
 import numpy as np
+from userid_db import del_userid, add_userid, get_usermajor
 
 app = Flask(__name__)
 
@@ -100,8 +101,7 @@ def handle_message(event):
 
     if text == "最新情報":
         userid = event.source.user_id
-        userid_df = pd.read_csv("userid.csv", encoding="cp932")
-        department = userid_df.loc[userid_df["userid"]==userid]["department"].values[0]
+        department = get_usermajor(userid) # ユーザーのdepartmentを取得
 
         information_all = now_info("全学生向け").split("\n&&&\n")
         information_dep = now_info(department).split("\n&&&\n")
@@ -181,9 +181,9 @@ def handle_postback(event):
         else:                     # 学部を選択したときのみsubjectがある
             department = user_major.split(" ")[0]
             subject = user_major.split(" ")[1]
-
-        newid = pd.DataFrame([department, subject, userid], index=["department", "subject", "user_id"]).T
-        newid.to_csv("userid.csv", encoding="cp932", index=False, mode="a", header=False)
+        
+        # ユーザー情報をDBに追記
+        add_userid(department, subject, userid)
 
         # 登録した所属の最新情報を送信
         TextSendMessages = [TextSendMessage(text="{} {}で登録しました".format(department, subject))]
@@ -195,14 +195,14 @@ def handle_postback(event):
         TextSendMessages.extend(TextSendMessages_dep)
         line_bot_api.reply_message(event.reply_token, TextSendMessages)
 
-# ブロックされたときにuserid辞書からユーザーのidを削除
+# ブロックされたときにDBからユーザー情報を削除
 @handler.add(UnfollowEvent)
 def handle_unfollow(event):
     userid = event.source.user_id
-    userid_df = pd.read_csv("userid.csv", encoding="cp932")
-    userid_df.drop(index=userid_df.index[np.where(userid_df["userid"]==userid)], inplace=True)
-    userid_df.to_csv("userid.csv", encoding="cp932", index=False)
+    del_userid(userid)
 
 
 if __name__ ==  "__main__":
     app.run(host="0.0.0.0", port=8000)
+    # app.debug = True
+    # app.run()
