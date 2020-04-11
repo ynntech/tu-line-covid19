@@ -35,11 +35,11 @@ line_bot_api = LineBotApi(LINE_CHANNEL_ACCESS_TOKEN)
 handler = WebhookHandler(LINE_CHANNEL_SECRET)
 
 #QuickReplyで表示する選択肢たち
-major_dic = {"文学部":["人文社会学科"], "教育学部":["教育科学科"], "法学部":["法学科"], "経済学部":["経済学科", "経営学科"],\
-            "理学部":["数学科","物理学科","宇宙地球物理学科","化学科","地圏環境科学科","地球惑星物質科学科","生物学科"],\
-            "医学部":["医学科","保健学科"], "歯学部":["歯学科"], "薬学部":["薬学科","創薬科学科"],\
+major_dic = {"文学部":["人文社会学科"], "教育学部":["教育科学科"], "法学部":["法学科"], "経済学部":["経済学科", "経営学科", "未定"],\
+            "理学部":["数学系","物理系","化学系", "地球科学系","生物系"],\
+            "医学部":["医学科","保健学科"], "歯学部":["歯学科"], "薬学部":["薬学科","創薬科学科", "未定"],\
             "工学部":["機械知能・航空工学科","電気情報物理工学科","化学・バイオ工学科","材料科学総合学科","建築・社会環境工学科"],\
-            "農学部":["生物生産科学科","応用生物化学科"], "文学研究科":None, "教育学研究科":None, "法学研究科":None,\
+            "農学部":["生物生産科学科","応用生物化学科", "未定"], "文学研究科":None, "教育学研究科":None, "法学研究科":None,\
             "経済学研究科":None, "理学研究科":None, "医学系研究科":None, "歯学研究科":None, "薬学研究科":None, "工学研究科":None,\
             "農学研究科":None, "国際文化研究科":None, "情報科学研究科":None, "生命科学研究科":None, "環境科学研究科":None, "医工学研究科":None}
 
@@ -119,7 +119,7 @@ def handle_follow(event):
             event.reply_token,
             [TextSendMessage(text="友だち追加ありがとうございます。\n\n登録した学部・研究科と、全学生向けのコロナウイルス関連のサイト掲載情報を配信します。\n\n概要・免責事項等は当アカウントのタイムライン投稿をご覧ください。"),
             TextSendMessage(
-            text="下のボタンから学部生か院生かを選択し、その後学部または研究科を選択してください。\n\n登録し直す場合は一度当アカウントをブロックし、その後ブロック解除してください。",
+            text="下のボタンから学部生か院生かを選択し、その後学部または研究科を選択してください。\n\n登録を誤った際は、登画面下部のメニューバーより登録をやり直すことができます。",
             quick_reply=QuickReply(
                 items=[QuickReplyButton(action=PostbackAction(label="学部生", data="学部生")),
                             QuickReplyButton(action=PostbackAction(label="院生", data="院生"))]
@@ -171,7 +171,7 @@ def handle_postback(event):
                 )))
 
     # 所属が選択された後、所属とuseridをcsvに追記
-    elif event.postback.data[-1] == "科":
+    elif event.postback.data[-1] == "科" or event.postback.data[-1] == "系":
         user_major = event.postback.data
         userid = event.source.user_id
 
