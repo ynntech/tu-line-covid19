@@ -11,8 +11,10 @@ app.config["JSON_SORT_KEYS"] = False
 info = Info()
 
 # 最新情報の取得API
-@app.route("/request/now/{string:major}", methods=["GET"])
-def recipe_request(major):
+@app.route("/request/now", methods=["POST"])
+def recipe_request():
+    data = request.get_json()
+    major = data["major"]
     if major in info.major_index:
         return jsonify({
                         "status":"200",

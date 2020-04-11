@@ -44,15 +44,16 @@ major_dic = {"文学部":["人文社会学科"], "教育学部":["教育科学�
             "農学研究科":None, "国際文化研究科":None, "情報科学研究科":None, "生命科学研究科":None, "環境科学研究科":None, "医工学研究科":None}
 
 ### scraping apiと連携用コード
+import json
 import requests
 from push_message import push_message
 
-headers = {"content-type": "application/json"}
 url = os.environ["WEB_SERVER_DOMAIN"]
 
 def now_info(major):
-    url = f"{url}/request/now/{major}"
-    response = requests.get(url, headers=headers)
+    data = {"major":major}
+    url = f"{url}/request/now"
+    response = requests.post(url. json=json.dump(data))
     return response.json()["response"]
 
 @app.route("/push", methods=['POST'])
