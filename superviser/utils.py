@@ -75,7 +75,7 @@ class Site:
         print("前回との変更を抽出中...")
         change = post.copy()
         for key in pre.keys():
-            if post[key] == pre[key]:
+            if (post[key] == pre[key]) and (pre[key] != []):
                 del change[key]
 
         if len(change) > 0:
@@ -169,7 +169,8 @@ class Superviser:
         data = {"message":message, "majors":majors, "subject":subject}
         requests.post(f"{self.heroku_domain}/push", json=json.dump(data))
         if res.status_code == 200:
-            print(f"{majors}に一斉送信しました")
+            text = f"【更新報告】\n対象：{majors}\n内容：{message}"
+            requests.post(self.slack_webhook_url, data=json.dumps({'text':text}))
         else:
             error = f"{majors}送信できなかった。。:jobs:＜:ぴえん:"
             requests.post(self.slack_webhook_url, data=json.dumps({'text':error}))
