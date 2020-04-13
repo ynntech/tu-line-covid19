@@ -213,10 +213,11 @@ class EconNews:
 class Econ(Site):
     path = os.path.join("..", os.path.join("sites_db", "econ.pickle"))
     ### ここは特例でGoogle documentやで。頑張ろうな
-    url = "https://docs.google.com/document/d/19ArkoemdFSNdgeF0XQO8mI3QNhjkUbXp2lrewNGh1qQ/edit"
+    url = "https://sites.google.com/view/rinji-econ-tohoku-ac-jp/"
     majors = ["経済学部", "経済学研究科", "会計大学院"]
 
     def get(self):
+        self.url = "https://docs.google.com/document/d/19ArkoemdFSNdgeF0XQO8mI3QNhjkUbXp2lrewNGh1qQ/edit"
         soup = self.request()
         ## 以降、サイトに合わせて書き直す必要あり
         blocks = soup.find_all("script")
@@ -229,6 +230,7 @@ class Econ(Site):
         ### 固定情報
         info_list[-1].content += "\n\n詳細はこちら\nhttps://sites.google.com/view/rinji-econ-tohoku-ac-jp/"
         ###
+        self.url = "https://sites.google.com/view/rinji-econ-tohoku-ac-jp/"
         return self.dic(info_list)
 
 
