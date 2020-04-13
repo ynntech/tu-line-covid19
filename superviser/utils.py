@@ -167,7 +167,7 @@ class Superviser:
     ### line bot apiとの連携用
     def push(self, message, majors, subject="false"):
         data = {"message":message, "majors":majors, "subject":subject}
-        requests.post(f"{self.heroku_domain}/push", json=json.dump(data))
+        res = requests.post(f"{self.heroku_domain}/push", json=json.dumps(data))
         if res.status_code == 200:
             text = f"【更新報告】\n対象：{majors}\n内容：{message}"
             requests.post(self.slack_webhook_url, data=json.dumps({'text':text}))
