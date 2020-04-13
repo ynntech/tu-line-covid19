@@ -514,13 +514,18 @@ class AgriNews(News):
     ## this should be overrided
     ## because the format of news will be different from the others
     def summary(self):
-        time = re.search("\d+.\d+", self.tag.text).group()
+        time = re.search("\d+.\d+", self.tag.text)
+        if time is not None:
+            time = time.group()
+            self.time = self.timeobj(time)
+        else:
+            time = "sample"
+            self.time = time
         contents = self.tag.text.split("更新　")[-1]
         href = self.tag.get("href")
         if href[0:4] != "http":
             href = self.base_url + href
         self.content = f"《{time}》\n{contents}\n{href}"
-        self.time = self.timeobj(time)
 
     def timeobj(self, timestr=""):
         year = "2020."
@@ -537,7 +542,19 @@ class Agri(Site):
         soup = self.request()
         ## 以降、サイトに合わせて書き直す必要あり
         info_list = soup.find("div", class_="area_news_cont").find_all("a")
+        ### 固定情報
+        stick1 = AgriNews(info_list[0], self.base_url)
+        contents = ["《4.13》", "農学部・農学研究科オンライン授業", "https://www.agri.tohoku.ac.jp/jp/education/remote/index.html"]
+        stick1.time = stick1.timeobj(timestr="4.13")
+        stick1.content = "\n".join(contents)
+        stick2 = AgriNews(info_list[0], self.base_url)
+        contents = ["《4.13》", "東北大学オンライン授業ガイド", "https://sites.google.com/view/teleclass-tohoku/forstudents"]
+        stick2.time = stick1.timeobj(timestr="4.13")
+        stick2.content = "\n".join(contents)
+        sticks = [stick1, stick2]
+        ###
         info_list = [AgriNews(info, self.url) for info in info_list]
+        info_list = sticks + [info for info in info_list  if info.time != "sample"]
         return self.dic(info_list)
 
 
