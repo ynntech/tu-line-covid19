@@ -187,8 +187,8 @@ class LawNews:
         self.content = ""
 
     def timeobj(self, timestr=""):
-        year = "2020."
-        tmp = datetime.datetime.strptime(year + timestr, "%Y.%m.%d")
+        year = "2020/"
+        tmp = datetime.datetime.strptime(year + timestr, "%Y/%m/%d")
         return datetime.date(tmp.year, tmp.month, tmp.day)
 
 
@@ -202,9 +202,8 @@ class Law(Site):
         soup = self.request()
         info_list = []
         permanent1 = LawNews()
-        time = soup.find(
-            class_="law-sub-contents pos-left").find("p").text.split("：")[-1]
-        time = "{}.{}".format(time.split("/")[0], time.split("/")[1])
+        time = soup.find(class_="law-sub-contents pos-left").find("p").text
+        time = re.search(r"更新：\d+/\d+", time).group().split("更新：")[-1]
         permanent1.content = "《{}》\n新コロナウイルス感染症（COVID-19）への対応についてが更新されました\n{}".format(
             time, self.url)
         permanent1.time = permanent1.timeobj(timestr=time)
@@ -221,9 +220,8 @@ class EconNews:
     # this should be overrided
     # because the format of news will be different from the others
     def summary(self):
-        split_text = self.data.split("\\n")
-        content = split_text[0].split("タイトル：")[-1]
-        time = split_text[1].split("発信日：")[-1]
+        content = self.data[0]
+        time = re.search(r"\d+年\d+月\d+日", self.data[1]).group()
         self.content = f"《{time}》\n{content}"
         self.time = self.timeobj(time)
 
@@ -247,14 +245,21 @@ class Econ(Site):
             if blocks[i].text[0:18] == "DOCS_modelChunk = ":
                 block = blocks[i]
                 break
-        info_list = block.text.split("{")[1].split("}")[0].split(
-            '"')[-2].split("----------上から順に新しい情報となります----------\\n")[1:]
-        info_list = [EconNews(info) for info in info_list]
-        # 固定情報
-        info_list[-1].content += "\n\n詳細はこちら\nhttps://sites.google.com/view/rinji-econ-tohoku-ac-jp/"
-        ###
+        info_list = block.text.split("{")[1].split("}")[0].split('"')[-2].split("\\n")
+        info_list = [EconNews(info) for info in self.abstract(info_list)]
         self.url = "https://sites.google.com/view/rinji-econ-tohoku-ac-jp/"
         return self.dic(info_list)
+
+    def abstract(self, split_list):
+        results = []
+        count = -1
+        for item in split_list:
+            if item[:4] == "タイトル":
+                results.append([item.split("タイトル：")[-1]])
+                count += 1
+            elif item[:3] == "発信日":
+                results[count].append(item.split("発信日：")[-1].split("\\t")[0])
+        return results
 
 
 ### 理学部・理学研究科 ###
