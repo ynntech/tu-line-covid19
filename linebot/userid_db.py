@@ -48,6 +48,8 @@ def search_userid(user_major, subject=False):
 def get_usermajor(userid):
     sql_search = f"select department from userinfo where userid='{userid}'"
     user_major = get_userinfo_list(sql_search)
+    if not user_major: # ユーザが所属登録していないときはFalseを返す
+        return False
     return user_major[0][0]
 
 

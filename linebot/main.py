@@ -120,13 +120,16 @@ def handle_message(event):
     if text == "最新情報":
         userid = event.source.user_id
         department = get_usermajor(userid) # ユーザーのdepartmentを取得
-
-        information_all = now_info("全学生向け").split("\n&&&\n")
-        information_dep = now_info(department).split("\n&&&\n")
-        TextSendMessages_all = [TextSendMessage(text=info_) for info_ in information_all]
-        TextSendMessages_dep = [TextSendMessage(text=info_) for info_ in information_dep]
-        TextSendMessages_all.extend(TextSendMessages_dep)
-        line_bot_api.reply_message(event.reply_token, TextSendMessages_all)
+        if department:
+            information_all = now_info("全学生向け").split("\n&&&\n")
+            information_dep = now_info(department).split("\n&&&\n")
+            TextSendMessages_all = [TextSendMessage(text=info_) for info_ in information_all]
+            TextSendMessages_dep = [TextSendMessage(text=info_) for info_ in information_dep]
+            TextSendMessages_all.extend(TextSendMessages_dep)
+            line_bot_api.reply_message(event.reply_token, TextSendMessages_all)
+        # ユーザが所属を登録せずに『最新情報』と送信したとき
+        else:
+             line_bot_api.reply_message(event.reply_token,TextSendMessage(text="先に学部・研究科を登録してください。"))
 
     if text =="所属再登録":
         userid = event.source.user_id
