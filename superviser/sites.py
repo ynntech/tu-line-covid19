@@ -245,7 +245,8 @@ class Econ(Site):
             if blocks[i].text[0:18] == "DOCS_modelChunk = ":
                 block = blocks[i]
                 break
-        info_list = block.text.split("{")[1].split("}")[0].split('"')[-2].split("\\n")
+        info_list = block.text.split("{")[1].split("}")[
+            0].split('"')[-2].split("\\n")
         info_list = [EconNews(info) for info in self.abstract(info_list)]
         self.url = "https://sites.google.com/view/rinji-econ-tohoku-ac-jp/"
         return self.dic(info_list)
@@ -475,6 +476,8 @@ class EngNews(News):
     def summary(self):
         time_tag = self.tag.find_next("td")
         time_split = time_tag.text.split(".")
+        print(f"time_split is {time_split}")
+
         time = "{}.{}".format(time_split[0], re.search(
             r'\d+', (time_split[1])).group())
         a_tag = self.tag.find("a")
@@ -504,8 +507,9 @@ class Eng(Site):
     def get(self):
         soup = self.request()
         # 以降、サイトに合わせて書き直す必要あり
-        info_list = soup.find(id="main").find_all("tr")
+        info_list = soup.find(id="main").find_all("tr")[1:]
         info_list = self.abstract(info_list)
+
         # 固定情報
         stick1 = EngNews(info_list[0], self.base_url)
         contents = ["《4/10》",
@@ -524,6 +528,7 @@ class Eng(Site):
         stick2.content = "\n".join(contents)
         sticks = [stick1, stick2]
         ###
+
         info_list = [EngNews(info, self.base_url) for info in info_list]
         info_list = sticks + info_list
         return self.dic(info_list)
@@ -536,6 +541,43 @@ class Eng(Site):
                 result.append(tag)
                 exception.append(tag.text)
         return result
+
+# 工学研究科英語
+
+
+# class EngENNews(News):
+#     # this should be overrided
+#     # because the format of news will be different from the others
+#     def summary(self):
+#         time = self.tag.find("th").text
+#         a_tags = self.tag.find_all("a")
+#         contents = []
+#         links = []
+#         for i in range(len(a_tags)):
+#             href = a_tags[i].get("href")
+#             links.append(href)
+#             contents.append(a_tags[i].text)
+#         contents = "\n".join(contents)
+#         links = "\n".join(links)
+#         self.content = f"《{time}》\n{contents}\n{links}"
+#         self.time = self.timeobj(time)
+
+#     def timeobj(self, timestr=""):
+#         tmp = datetime.datetime.strptime(timestr, "%Y年%m月%d日")
+#         return datetime.date(tmp.year, tmp.month, tmp.day)
+
+
+# class EngEN(Site):
+#     path = os.path.join("..", os.path.join("sites_db", "intcul.pickle"))
+#     url = "http://www.intcul.tohoku.ac.jp/"
+#     majors = ["国際文化研究科"]
+
+#     def get(self):
+#         soup = self.request()
+#         # 以降、サイトに合わせて書き直す必要あり
+#         info_list = soup.find_all("tr")
+#         info_list = [EngENNews(info) for info in info_list]
+#         return self.dic(info_list)
 
 
 ### 農学部・農学研究科 ###
@@ -677,7 +719,7 @@ class IS(Site):
         boxes = soup.find_all("ul", class_="border")
         for box in boxes:
             info_list.extend(box.find_all("a"))
-        info_list = [ISNews(info, self.base_url) for info in info_list]
+        info_list = [ISNews(info, self.base_url) for info in info_list[:-1]]
         return self.dic(info_list)
 
 
