@@ -75,7 +75,6 @@ class TU(Site):
 
 
 ### 文学部・文学研究科 ###
-### 文学部・文学研究科 ###
 class SalNews:
     # this should be overrided
     # because the format of news will be different from the others
@@ -166,7 +165,6 @@ class SedNews(News):
 
 
 class Sed(Site):
-    path = os.path.join("..", os.path.join("sites_db", "sed.pickle"))
     url = "https://www.sed.tohoku.ac.jp/news.html"
     base_url = "https://www.sed.tohoku.ac.jp"
     majors = ["教育学部", "教育学研究科"]
@@ -176,9 +174,23 @@ class Sed(Site):
         # 以降、サイトに合わせて書き直す必要あり
         info_list = soup.find("div", class_="inner").find_all("ul")[
             0].find_all("a")
-        info_list = [SedNews(info, self.base_url) for info in info_list]
+        # 固定情報
+        stick1 = SedNews(info_list[-1], self.base_url)
+        stick1_url1 = "教育学研究科：https://www.sed.tohoku.ac.jp/graduate/2020class.html"
+        stick1_url2 = "教育学部：https://www.sed.tohoku.ac.jp/faculty/2020class.html"
+        stick1.time = stick1.timeobj(timestr="4.20")
+        stick1.content = f"《4.20》\n「開講する授業の情報」が更新されることがあります。折々にご確認ください。\n{stick1_url1}\n{stick1_url2}"
+        ###
+        info_list = [SedNews(info, self.base_url) for info in self.abstract(info_list)]
+        info_list.append(stick1)
         return self.dic(info_list)
 
+    def abstract(self, tags):
+        result = []
+        for tag in tags:
+            if tag.text != "「開講する授業の情報」":
+                result.append(tag)
+        return result
 
 ### 法学部・法学研究科/法科大学院・公共政策大学院 ###
 class LawNews:

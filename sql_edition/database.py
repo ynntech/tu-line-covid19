@@ -10,7 +10,7 @@ class DataBase:
     PASSWD = ""
     DB = ""
     # major indexes
-    major_index = {"全学生向け":"http://www.tohoku.ac.jp/japanese/disaster/outbreak/01/outbreak0101/",
+    major_index = {"全学生向け":"http://www.bureau.tohoku.ac.jp/covid19BCP/index.html",
                    "文学部":"https://www.sal.tohoku.ac.jp/jp/news/covid19.html",
                    "文学研究科":"https://www.sal.tohoku.ac.jp/jp/news/covid19.html",
                    "教育学部":"https://www.sed.tohoku.ac.jp/news.html",
@@ -127,7 +127,7 @@ class DataBase:
         url = self.major_index[major]
         data = self.get_new(table=major)
         if data is not None:
-            contents = [f"{major}宛の新規情報があります。",
+            contents = [f"{major}の新規情報があります。",
                         "公式サイトもご確認ください。", url,
                         "="*15]
             for info in data:

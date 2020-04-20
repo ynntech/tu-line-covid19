@@ -57,16 +57,6 @@ class Site:
                 data[item.time].append(item.content)
         return data
 
-    def dic(self, info_list=[]):
-        tmp = datetime.datetime.strptime("2020年2月1日", "%Y年%m月%d日")
-        limit_date = datetime.date(tmp.year, tmp.month, tmp.day)
-        info_list = sorted(info_list, key=lambda x:x.time, reverse=True)
-        data = defaultdict(list)
-        for item in info_list:
-            if item.time >= limit_date:
-                data[item.time].append(item.content)
-        return data
-
     def update(self):
         self.data = self.get()
         return self.today, self.override
