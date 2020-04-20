@@ -74,7 +74,7 @@ class TU(Site):
         return info_list
 
 
-### 文学部・文学研究科 ###
+
 ### 文学部・文学研究科 ###
 class SalNews:
     # this should be overrided
