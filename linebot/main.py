@@ -21,7 +21,7 @@ from linebot.models import (
     TextComponent, SpacerComponent, IconComponent, ButtonComponent,
     SeparatorComponent, QuickReply, QuickReplyButton
 )
-from userid_db import del_userid, add_userid, get_usermajor
+from userid_db import User_DB
 
 app = Flask(__name__)
 
@@ -29,6 +29,8 @@ LINE_CHANNEL_ACCESS_TOKEN = os.environ["LINE_CHANNEL_ACCESS_TOKEN"]
 LINE_CHANNEL_SECRET = os.environ["LINE_CHANNEL_SECRET"]
 line_bot_api = LineBotApi(LINE_CHANNEL_ACCESS_TOKEN)
 handler = WebhookHandler(LINE_CHANNEL_SECRET)
+
+user_db = User_DB()
 
 #QuickReplyで表示する選択肢たち
 major_dic = {"学部生":{"文学部":["人文社会学科"],
@@ -65,7 +67,9 @@ major_dic = {"学部生":{"文学部":["人文社会学科"],
 ### scraping apiと連携用コード
 import json
 import requests
-from push_message import push_message
+from push_message import Push_Message
+
+pusu_message = Push_Message()
 
 def now_info(major):
     data = {"major":major}
@@ -80,7 +84,7 @@ def push():
         if type(data) != dict:
             data = json.loads(data)
         subject = True if data["subject"] == "true" else False
-        push_message(data["message"], data["majors"], subject)
+        pusu_message.push_message(data["message"], data["majors"], subject)
         return jsonify({"status":"200"})
     except:
         abort(400)
@@ -119,7 +123,7 @@ def handle_message(event):
 
     if text == "最新情報":
         userid = event.source.user_id
-        department = get_usermajor(userid) # ユーザーのdepartmentを取得
+        department = user_db.get_usermajor(userid) # ユーザーのdepartmentを取得
         if department:
             information_all = now_info("全学生向け").split("\n&&&\n")
             information_dep = now_info(department).split("\n&&&\n")
@@ -133,7 +137,7 @@ def handle_message(event):
 
     if text =="所属再登録":
         userid = event.source.user_id
-        del_userid(userid) # user情報を削除
+        user_db.del_userid(userid) # user情報を削除
 
         line_bot_api.reply_message(
             event.reply_token,
@@ -219,7 +223,7 @@ def handle_postback(event):
             subject = user_major.split(" ")[1]
 
         # ユーザー情報をDBに追記
-        add_userid(department, subject, userid)
+        user_db.add_userid(department, subject, userid)
 
         # 登録した所属の最新情報を送信
         TextSendMessages = [TextSendMessage(text="{} {}で登録しました".format(department, subject))]
@@ -235,8 +239,9 @@ def handle_postback(event):
 @handler.add(UnfollowEvent)
 def handle_unfollow(event):
     userid = event.source.user_id
-    del_userid(userid)
+    user_db.del_userid(userid)
 
 
 if __name__ ==  "__main__":
-    app.run(host="0.0.0.0", port=8000)
+    port = int(os.environ.get('PORT', 8080))
+    app.run(host ='0.0.0.0',port = port)
