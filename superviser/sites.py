@@ -73,6 +73,57 @@ class TU(Site):
                 break
         return info_list
 
+        
+### 全学教育 ###
+class GenNews(News):
+    def __init__(self, info, base_url):
+        '''
+        <parameter>
+        tag (bs4.element.Tag) : single topic object
+        '''
+        self.tag = info["tag"]
+        self.time_ = info["time"]
+        self.base_url = base_url
+        self.summary()
+
+    # this should be overrided
+    # because the format of news will be different from the others
+    def summary(self):
+        contents = self.tag.text
+        href = self.tag.get("href")
+        time = self.time_.split("/", 1)[1]
+        self.content = f"《{time}》\n{contents}\n{href}"
+        self.time = self.timeobj(time)
+
+    def timeobj(self, timestr=""):
+        year = "2020/"
+        tmp = datetime.datetime.strptime(year + timestr, "%Y/%m/%d")
+        return datetime.date(tmp.year, tmp.month, tmp.day)
+
+
+class Gen(Site):
+    url = "http://www2.he.tohoku.ac.jp/zengaku/zengaku.html"
+    base_url = "http://www2.he.tohoku.ac.jp"
+    majors = ["全学生向け"]
+
+    def get(self):
+        soup = self.request()
+        # 以降、サイトに合わせて書き直す必要あり
+        info_list = soup.find("table").find_all("tr")
+        info_list = [GenNews(info, self.base_url) for info in self.abstract(info_list)]
+        return self.dic(info_list)
+
+    def abstract(self, tags):
+        result = []
+        for tag in tags:
+            if tag.find("td", class_="date"):
+                time = tag.find("td", class_="date").text
+                if time[:6] == "2020/4" or time[:6] == "2020/5" or time[:6] == "2020/6"
+                    time[:6] == "2020/7" or time[:6] == "2020/7" or time[:6] == "2020/8": # 4月以降のみ取り出す
+                    # aタグに時間情報がないので、trの中のtdから取り出している
+                    result.append({"tag":tag.find("a"), "time":time}) 
+        return result
+
 
 ### 文学部・文学研究科 ###
 class SalNews:
