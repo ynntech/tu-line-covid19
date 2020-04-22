@@ -69,7 +69,7 @@ import json
 import requests
 from push_message import Push_Message
 
-pusu_message = Push_Message()
+pusu_message_ = Push_Message()
 
 def now_info(major):
     data = {"major":major}
@@ -84,7 +84,7 @@ def push():
         if type(data) != dict:
             data = json.loads(data)
         subject = True if data["subject"] == "true" else False
-        pusu_message.push_message(data["message"], data["majors"], subject)
+        pusu_message_.push_message(data["message"], data["majors"], subject)
         return jsonify({"status":"200"})
     except:
         abort(400)

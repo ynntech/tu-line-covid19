@@ -6,6 +6,7 @@ from userid_db import DataBase
 
 class Push_Message(DataBase):
     def __init__(self):
+        super().__init__()
         self.line_channel_access_token = os.environ["LINE_CHANNEL_ACCESS_TOKEN"]
         self.line_bot_api = LineBotApi(self.line_channel_access_token)
 
