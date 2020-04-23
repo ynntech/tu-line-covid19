@@ -21,7 +21,7 @@ from linebot.models import (
     TextComponent, SpacerComponent, IconComponent, ButtonComponent,
     SeparatorComponent, QuickReply, QuickReplyButton
 )
-from userid_db import User_DB
+from userinfo_db import User_DB
 
 app = Flask(__name__)
 
@@ -234,6 +234,12 @@ def handle_postback(event):
         TextSendMessages.extend(TextSendMessages_all)
         TextSendMessages.extend(TextSendMessages_dep)
         line_bot_api.reply_message(event.reply_token, TextSendMessages)
+
+    elif event.postback.data in "123":
+        userid = event.source.user_id
+        ans = event.postback.data
+        user_db.taburate_survey(userid, ans)
+        line_bot_api.reply_message(event.reply_token, TextSendMessage(text="ご回答ありがとうございました。"))
 
 # ブロックされたときにDBからユーザー情報を削除
 @handler.add(UnfollowEvent)

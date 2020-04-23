@@ -2,7 +2,7 @@ from linebot import LineBotApi
 from linebot.models import TextSendMessage
 from linebot.exceptions import LineBotApiError
 import os
-from userid_db import DataBase
+from userinfo_db import DataBase
 
 class Push_Message(DataBase):
     def __init__(self):
@@ -19,7 +19,7 @@ class Push_Message(DataBase):
                 sql_search = f"select userid from userinfo where subject='{user_major}'" # subject列がuser_majorである行のuseridのリストを取得
             else:
                 sql_search = f"select userid from userinfo where department='{user_major}'" # department列がuser_majorである行のuseridのリストを取得
-        target_ids = get_userinfo_list(sql_search)
+        target_ids = self.get_info_list(sql_search)
         return target_ids
 
     def push_message(self, message, user_majors, subject=False):

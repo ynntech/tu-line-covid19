@@ -13,12 +13,12 @@ class DataBase:
         self.cursor = self.connection.cursor(cursor_factory=psycopg2.extras.DictCursor)
 
     def get_info_list(self, sql):
-        self.cursor.execute (sql)
+        self.cursor.execute(sql)
         results = self.cursor.fetchall()
         return results
 
     def execute_sql(self, sql):
-        self.cursor.execute (sql)
+        self.cursor.execute(sql)
 
 
 # ユーザ情報を管理するクラス
