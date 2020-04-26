@@ -91,7 +91,7 @@ class DataBase:
             data = self.get(table=table)
             if data is None:
                 tmp = ["="*15, f"No information on {name}.",
-                       "Check the official site.", url, ""]
+                       "Check the official site.", url]
                 result += tmp
             else:
                 tmp = []
@@ -99,14 +99,14 @@ class DataBase:
                     tmp.append(info)
                 header = ["="*15, f"Now, {len(tmp)} information on {name}.", "="*15]
                 footer = ["="*15, "Check the official site.", url, ""]
-                result += header
-                result += tmp
-                result += footer
+                tmp = header + tmp + footer
+                result += self.separate(obj=tmp)
 
             if table == "TU":
                 result.append(f"{'='*15}\nOnline class guide\nhttps://sites.google.com/view/teleclass-tohoku/forstudents\nClick 'English version'\n")
 
-        return "\n".join(self.separate(obj=result))
+            result.append("&&&")
+        return "\n".join(result[:-1])
 
     def new(self):
         result = []
@@ -114,15 +114,17 @@ class DataBase:
             name = self.site_names[table]
             data = self.get_new(table=table)
             if data is not None:
+                tmp = []
+                for info in data:
+                    tmp.append(info)
                 header = ["="*15, f"New information on {name}.",
                           "Check the official site.", url, "="*15]
-                result += header
-                for info in data:
-                    result.append(info)
-                result.append("")
+                tmp = header + tmp
+                result += self.separate(obj=tmp)
+                result.append("&&&")
 
         if len(result) > 0:
-            return "\n".join(self.separate(obj=result))
+            return "\n".join(result[:-1])
         else:
             return None
 
@@ -141,15 +143,15 @@ class DataBase:
                     tmp.append(info)
                 header = ["="*15, f"Today, you have {len(tmp)} information on {name}.",
                           "Check the official site.", url, "="*15]
-                result += header
-                result += tmp
-                result.append("")
+                tmp = header + tmp
+                result += self.separate(obj=tmp)
+                result.append("&&&")
             else:
                 tmp = ["="*15, f"No update today on {name}.",
-                       "Check the official site.", url, ""]
+                       "Check the official site.", url, "&&&"]
                 result += tmp
 
-        return "\n".join(self.separate(obj=result))
+        return "\n".join(result[:-1])
 
     def register(self, info, override=False):
         '''
