@@ -1,74 +1,25 @@
 #-*- coding: utf-8 -*-
+import os
 import MySQLdb
 import json
 import datetime
 import random
 
 class DataBase:
-    HOST = ""
-    USER = ""
-    PASSWD = ""
-    DB = ""
-    # translate into japanese
-    translate_dic = {"文学部":"Faculty of Arts and Letters",
-                     "教育学部":"Faculty of Education",
-                     "法学部":"Faculty of Law",
-                     "経済学部":"Faculty of Economics",
-                     "理学部":"Faculty of Science",
-                     "医学部":"Faculty of Medicine",
-                     "歯学部":"Faculty of Dentistry",
-                     "薬学部":"Faculty of Pharmaceutical Sciences",
-                     "工学部":"Faculty of Engineering",
-                     "農学部":"Faculty of Agriculture",
-                     "文学研究科":"Graduate School of Arts and Letters",
-                     "教育学研究科":"Graduate School of Education",
-                     "法学研究科":"Graduate School of Law",
-                     "経済学研究科":"Graduate School of Economics",
-                     "理学研究科":"Graduate School of Science",
-                     "医学系研究科":"Graduate School of Medicine",
-                     "歯学研究科":"Graduate School of Dentistry",
-                     "薬学研究科":"Graduate School of Pharmaceutical Sciences",
-                     "工学研究科":"Graduate School of Engineering",
-                     "農学研究科":"Graduate School of Agricultural Science",
-                     "国際文化研究科":"Graduate School of International Cultural Studies",
-                     "情報科学研究科":"Graduate School of Information Sciences",
-                     "生命科学研究科":"Graduate School of Life Sciences",
-                     "環境科学研究科":"Graduate School of Environmental Studies",
-                     "医工学研究科":"Graduate School of Biomedical Engineering",
-                     "法科大学院":"",
-                     "公共政策大学院":"",
-                     "会計大学院":"Accounting School"}
+    HOST = os.environ["MYSQL_HOST"]
+    USER = os.environ["MYSQL_USER"]
+    PASSWD = os.environ["MYSQL_PSSWD"]
+    DB = os.environ["MYSQL_DB"]
 
-    # major indexes
-    major_index = {"全学生向け":"http://www.bureau.tohoku.ac.jp/covid19BCP/index.html",
-                   "文学部":"https://www.sal.tohoku.ac.jp/jp/news/covid19.html",
-                   "文学研究科":"https://www.sal.tohoku.ac.jp/jp/news/covid19.html",
-                   "教育学部":"https://www.sed.tohoku.ac.jp/news.html",
-                   "教育学研究科":"https://www.sed.tohoku.ac.jp/news.html",
-                   "法学部":"http://www.law.tohoku.ac.jp/covid19/",
-                   "法学研究科":"http://www.law.tohoku.ac.jp/covid19/",
-                   "経済学部":"https://sites.google.com/view/rinji-econ-tohoku-ac-jp/",
-                   "経済学研究科":"https://sites.google.com/view/rinji-econ-tohoku-ac-jp/",
-                   "理学部":"https://www.sci.tohoku.ac.jp/news/20200305-10978.html",
-                   "理学研究科":"https://www.sci.tohoku.ac.jp/news/20200305-10978.html",
-                   "医学部":"https://www.med.tohoku.ac.jp/admissions/2003announce/index.html",
-                   "医学系研究科":"https://www.med.tohoku.ac.jp/admissions/2003announce/index.html",
-                   "歯学部":"http://www.dent.tohoku.ac.jp/important/202003.html",
-                   "歯学研究科":"http://www.dent.tohoku.ac.jp/important/202003.html",
-                   "薬学部":"http://www.pharm.tohoku.ac.jp/info/200331/200331.shtml",
-                   "薬学研究科":"http://www.pharm.tohoku.ac.jp/info/200331/200331.shtml",
-                   "工学部":"https://www.eng.tohoku.ac.jp/news/detail-,-id,1561.html",
-                   "工学研究科":"https://www.eng.tohoku.ac.jp/news/detail-,-id,1561.html",
-                   "農学部":"https://www.agri.tohoku.ac.jp/jp/news/covid-19/",
-                   "農学研究科":"https://www.agri.tohoku.ac.jp/jp/news/covid-19/",
-                   "国際文化研究科":"http://www.intcul.tohoku.ac.jp/",
-                   "情報科学研究科":"https://www.is.tohoku.ac.jp/jp/forstudents/detail---id-2986.html",
-                   "生命科学研究科":"https://www.lifesci.tohoku.ac.jp/outline/covid19_taiou/",
-                   "環境科学研究科":"http://www.kankyo.tohoku.ac.jp/index.html",
-                   "医工学研究科":"http://www.bme.tohoku.ac.jp/information/news/",
-                   "法科大学院":"http://www.law.tohoku.ac.jp/covid19/",
-                   "公共政策大学院":"http://www.law.tohoku.ac.jp/covid19/",
-                   "会計大学院":"https://sites.google.com/view/rinji-econ-tohoku-ac-jp/"}
+    # tables
+    tables = {"TU":"https://www.tohoku.ac.jp/en/news/university_news/index.html",
+              "GLC":"https://www.insc.tohoku.ac.jp/english/",
+              "ENGINEER":"https://www.eng.tohoku.ac.jp/english/news/news4/"}
+
+    site_names = {"TU":"University News",
+                  "GLC":"Global Learning Center News",
+                  "ENGINEER":"Engineering News"}
+
 
     def __init__(self):
         self.connect()
@@ -133,62 +84,79 @@ class DataBase:
             for r in res:
                 print(f"id: {r[0]}, date: {r[1]}, title: {r[2]}, new: {r[3]}")
 
-    def now(self, major):
-        url = self.major_index[major]
-        en_major = self.translate_dic[major]
-        data = self.get(table=major)
-        if data is None:
-            return f"{'='*15}\nNo information for {en_major}.\nCheck the official site.\n{url}\n{'='*15}"
-        else:
-            contents = []
-            count = 0
-            for info in data:
-                contents.append(info)
-                count += 1
-                if count%18==0: # lineメッセージの文字制限のためセパレーター文字列を追加
-                    contents.append("&&&")
-            if major == "全学生向け":
-                contents.append(f"{'='*15}\nOnline class guide\nhttps://sites.google.com/view/teleclass-tohoku/forstudents\nClick 'English version'")
-            contents.append(f"Check the official site\n{url}")
-            header = ["="*15, f"Now, {count} information for {major}.", "="*15]
-            return "\n".join(header + contents)
+    def now(self):
+        result = []
+        for tabel, url in self.tables.items():
+            name = self.site_names[table]
+            data = self.get(table=tabel)
+            if data is None:
+                tmp = ["="*15, f"No information on {name}.",
+                       "Check the official site.", url, ""]
+                result += tmp
+            else:
+                tmp = []
+                for info in data:
+                    tmp.append(info)
+                header = ["="*15, f"Now, {len(tmp)} information on {name}.", "="*15]
+                footer = ["="*15, "Check the official site.", url, ""]
+                result += header
+                result += tmp
+                result += footer
 
-    def new(self, major):
-        db = self.cursor
-        url = self.major_index[major]
-        en_major = self.translate_dic[major]
-        data = self.get_new(table=major)
-        if data is not None:
-            contents = [f"New information for {en_major}.",
-                        "Check the official site.", url,
-                        "="*15]
-            for info in data:
-                contents.append(info)
-            return "\n".join(contents)
+            if tabel == "TU":
+                result.append(f"{'='*15}\nOnline class guide\nhttps://sites.google.com/view/teleclass-tohoku/forstudents\nClick 'English version'\n")
+
+        return "\n".join(self.separate(obj=result))
+
+    def new(self):
+        result = []
+        for tabel, url in self.tables.items():
+            name = self.site_names[table]
+            data = self.get_new(table=tabel)
+            if data is not None:
+                header = ["="*15, f"New information on {name}.",
+                          "Check the official site.", url, "="*15]
+                result += header
+                for info in data:
+                    result.append(info)
+                result.append("")
+
+        if len(result) > 0:
+            return "\n".join(self.separate(obj=result))
         else:
             return None
 
-    def today(self, major):
-        db = self.cursor
-        url = self.major_index[major]
-        en_major = self.translate_dic[major]
+    def today(self):
         now = datetime.datetime.now(datetime.timezone(
                                             datetime.timedelta(hours=9)))
         date = now.strftime('%Y/%m/%d')
-        data = self.get_date(table=major, date=date)
-        if data is not None:
-            data.append(f"Check the official site.\n{url}")
-            header = ["="*15, f"Today, you have {len(data)-1} information for {en_major}.", "="*15]
-            return "\n".join(header + data)
-        else:
-            return f"{'='*15}\nNo update today, for {en_major}.\nCheck the official site.\n{url}\n{'='*15}"
+
+        result = []
+        for tabel, url in self.tables.items():
+            name = self.site_names[table]
+            data = self.get_date(table=tabel, date=date)
+            if data is not None:
+                tmp = []
+                for info in data:
+                    tmp.append(info)
+                header = ["="*15, f"Today, you have {len(tmp)} information on {name}.",
+                          "Check the official site.", url, "="*15]
+                result += header
+                result += tmp
+                result.append("")
+            else:
+                tmp = ["="*15, f"No update today on {name}.",
+                       "Check the official site.", url, ""]
+                result += tmp
+
+        return "\n".join(self.separate(obj=result))
 
     def register(self, info, override=False):
         '''
         info should have this format
         info = {
             "date": "2020/4/12",
-            "targets": ["***"],
+            "target": "TU",
             "content": "\n《4/12》\n*****\nhttps://*****",
         }
         '''
@@ -196,42 +164,40 @@ class DataBase:
         try:
             db = self.cursor
             date = info["date"]
-            targets = info["targets"]
+            table = info["target"]
             content = info["content"]
             contents = ["《" + info for info in content.split("\n《")[1:]]
 
-            for table in targets:
-                if table in self.major_index.keys():
-                    target = f"into {table}"
-                    db.execute(f"select max(id) from {table}")
-                    _id = int(db.fetchone()[0])
-                    # 既にある情報は除外するため、同日にある情報の取得
-                    exists_today = self.get_date(table=table, date=date)
-                    if exists_today is None:
-                        exists_today = []
-                    # 既にある情報の取得
-                    exists_all = self.get(table=table)
-                    if exists_all is None:
-                        exists_all = []
-                    else:
-                        exists_all = [info.split("》")[-1] for info in exists_all]
+            if table in self.tables.keys():
+                target = f"into {table}"
+                db.execute(f"select max(id) from {table}")
+                _id = int(db.fetchone()[0])
+                # 既にある情報は除外するため、同日にある情報の取得
+                exists_today = self.get_date(table=table, date=date)
+                if exists_today is None:
+                    exists_today = []
+                # 既にある情報の取得
+                exists_all = self.get(table=table)
+                if exists_all is None:
+                    exists_all = []
+                else:
+                    exists_all = [info.split("》")[-1] for info in exists_all]
 
-                    for i in range(len(contents)):
-                        text = contents[i]
-                        if override and (text.split("》")[-1] in exists_all):
-                            term = f"delete from {table} where content=\'{text}\'"
-                            db.execute(term)
-                            _id += 1
-                            v = f"({_id}, \'{date}\', \'{text}\')"
-                            term = f"insert {target} (id, time, content) values {v}"
-                            db.execute(term)
-                            self.save()
-                        elif text not in exists_today:
-                            _id += 1
-                            v = f"({_id}, \'{date}\', \'{text}\')"
-                            term = f"insert {target} (id, time, content) values {v}"
-                            db.execute(term)
-                            self.save()
+                for text in contents:
+                    if override and (text.split("》")[-1] in exists_all):
+                        term = f"delete from {table} where content=\'{text}\'"
+                        db.execute(term)
+                        _id += 1
+                        v = f"({_id}, \'{date}\', \'{text}\')"
+                        term = f"insert {target} (id, time, content) values {v}"
+                        db.execute(term)
+                        self.save()
+                    elif text not in exists_today:
+                        _id += 1
+                        v = f"({_id}, \'{date}\', \'{text}\')"
+                        term = f"insert {target} (id, time, content) values {v}"
+                        db.execute(term)
+                        self.save()
             return True
         except:
             return False
@@ -241,20 +207,20 @@ class DataBase:
         self.get_new(table=table)
 
     def open_all(self):
-        for major in self.major_index.keys():
-            self.open(table=major)
+        for table in self.tables.keys():
+            self.open(table=table)
 
-    def create_table(self, name):
+    def create_table(self, table):
         self.save()
         db = self.cursor
         columns = "(id int unique, time date, content text, new int default 1)"
-        term = f"create table if not exists {name} {columns}"
+        term = f"create table if not exists {table} {columns}"
         db.execute(term)
         self.save()
 
     def start(self):
-        for major in self.major_index.keys():
-            self.create_table(name=major)
+        for table in self.tables.keys():
+            self.create_table(table=table)
         self.reset()
 
     def reset_table(self, table):
@@ -295,6 +261,19 @@ class DataBase:
             term = f"delete from {table} where id={_id}"
             db.execute(term)
             self.save()
+
+    def separate(self, obj):
+        result = []
+        tmp = ""
+        for string in obj:
+            if len(tmp) + len(string) <= 2000:
+                tmp += "\n"
+                tmp += string
+            else:
+                result.append("&&&")
+                tmp = string
+            result.append(string)
+        return result
 
     def __del__(self):
         self.save()

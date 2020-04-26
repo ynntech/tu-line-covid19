@@ -30,7 +30,7 @@ class News:
 
 class Site:
     url = ""
-    majors = []
+    table = ""
     override = False
 
     def get(self):
@@ -40,7 +40,7 @@ class Site:
         return defaultdict(list)
 
     def request(self):
-        print(f"【{self.majors[0]}】Connecting...")
+        print(f"【{self.table}】Connecting...")
         response = requests.get(self.url)
         response.encoding = response.apparent_encoding
         soup = BeautifulSoup(response.text, "lxml")
@@ -106,7 +106,7 @@ class Superviser:
                     content = "\n" + "\n".join(result)
                     info = {
                         "date":date,
-                        "targets":obj.majors,
+                        "target":obj.table,
                         "content":content
                     }
                     res = self.db.register(info=info, override=override)
@@ -117,22 +117,20 @@ class Superviser:
                 else:
                     print("No change")
             except:
-                error_text = "英語版 {}が対象のサイトがうまくスクレイピングできんかった。。{}".format(obj.majors, obj.url)
+                error_text = "英語版 {}が対象のサイトがうまくスクレイピングできんかった。。{}".format(obj.table, obj.url)
                 requests.post(self.slack_webhook_url, data=json.dumps({'text':error_text}))
 
     def call(self):
         print("Checking new information.")
-        major_index = self.db.major_index
-        for major in major_index.keys():
-            try:
-                result = self.db.new(major=major)
-            except:
-                result = None
-            if result is not None:
-                self.push(message=result, majors=[major])
-                print(f"Message pushed >> {major}")
-            else:
-                print("No new information")
+        try:
+            result = self.db.new()
+        except:
+            result = None
+        if result is not None:
+            self.push(message=result)
+            print(f"Message pushed")
+        else:
+            print("No new information")
 
     def run(self):
         while True:
@@ -154,7 +152,7 @@ class Superviser:
                         content = "\n" + "\n".join(dayinfo[0])
                         info = {
                             "date":date,
-                            "targets":obj.majors,
+                            "target":obj.table,
                             "content":content
                         }
                         res = self.db.register(info=info, override=override)
@@ -163,7 +161,7 @@ class Superviser:
                         else:
                             print("Failed reload")
             except:
-                print("rFailed reload")
+                print("Failed reload")
 
     @property
     def targets(self):
@@ -174,17 +172,17 @@ class Superviser:
         return "\n".join(self._timers)
 
     ### line bot apiとの連携用
-    def push(self, message, majors, subject="false"):
-        data = {"message":message, "majors":majors, "subject":subject}
+    def push(self, message):
+        data = {"message":message}
         res = requests.post(f"{self.heroku_domain}/push", json=json.dumps(data))
         if res.status_code == 200:
-            text = f"【英語版 更新報告】\n対象：{majors}\n内容：{message}"
+            text = f"【英語版 更新報告】\n内容：{message}"
             requests.post(self.slack_webhook_url, data=json.dumps({'text':text}))
         elif res.status_code == 503:
-            text = f"【英語版 更新報告】\n対象：{majors}\n内容：{message}\n*status: 配信完了まで時間かかったぽいやつ*"
+            text = f"【英語版 更新報告】\n内容：{message}\n*status: 配信完了まで時間かかってるぽいやつ*"
             requests.post(self.slack_webhook_url, data=json.dumps({'text':text}))
         else:
-            error = f"{majors}送信できなかった。。:jobs:＜:ぴえん:"
+            error = f"英語版、送信できなかった。。:jobs:＜:ぴえん:"
             requests.post(self.slack_webhook_url, data=json.dumps({'text':error}))
 
     def knock(self):
