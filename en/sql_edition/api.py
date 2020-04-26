@@ -23,7 +23,7 @@ def request_now():
                         "response":db.now()
                         })
     except:
-        abort(503, "Server error")
+        abort(503, "Scraping server error")
 
 # Google formからの受け取りAPI
 @app.route("/request/push", methods=["POST"])

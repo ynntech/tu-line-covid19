@@ -19,18 +19,14 @@ class Push_Message(DataBase):
     def push_message(self, message):
         """
         ==Parameters==
-            message(str)      : ユーザに送りたいメッセージ 
+            message(str)      : ユーザに送りたいメッセージ
         ==Return==
             None
-        """        
+        """
         target_ids = self.serch_userid()
 
         for userid in target_ids:
             try:                            #メッセージを送信したい相手のIDを入力
                 self.line_bot_api.push_message(userid[0], TextSendMessage(text=message))
             except LineBotApiError as e:
-                print("error") 
-
-
-if __name__ == "__main__":
-    push_message("更新されました\nhttps://www.eng.tohoku.ac.jp/news/detail-,-id,1561.html", "理学部")
+                print("error")
