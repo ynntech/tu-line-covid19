@@ -2,6 +2,7 @@
 import os
 import re
 import datetime
+from collections import defaultdict
 
 from utils import News, Site
 
