@@ -1,12 +1,13 @@
 #-*- coding: utf-8 -*-
 from utils import Superviser
-from sites import BcpEn, EngEn
+from sites import BcpEn, GLC, EngEn
 
 
 if __name__ == "__main__":
     _bcp = BcpEn()
+    _glc = GLC()
     _eng = EngEn()
-    targets = [_bcp, _eng]
+    targets = [_bcp, _glc, _eng]
     timers = ["09:30", "14:30", "19:30"]
     posting = ["10:00", "15:00", "20:00"]
 
