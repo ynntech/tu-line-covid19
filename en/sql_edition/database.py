@@ -86,9 +86,9 @@ class DataBase:
 
     def now(self):
         result = []
-        for tabel, url in self.tables.items():
+        for table, url in self.tables.items():
             name = self.site_names[table]
-            data = self.get(table=tabel)
+            data = self.get(table=table)
             if data is None:
                 tmp = ["="*15, f"No information on {name}.",
                        "Check the official site.", url, ""]
@@ -103,16 +103,16 @@ class DataBase:
                 result += tmp
                 result += footer
 
-            if tabel == "TU":
+            if table == "TU":
                 result.append(f"{'='*15}\nOnline class guide\nhttps://sites.google.com/view/teleclass-tohoku/forstudents\nClick 'English version'\n")
 
         return "\n".join(self.separate(obj=result))
 
     def new(self):
         result = []
-        for tabel, url in self.tables.items():
+        for table, url in self.tables.items():
             name = self.site_names[table]
-            data = self.get_new(table=tabel)
+            data = self.get_new(table=table)
             if data is not None:
                 header = ["="*15, f"New information on {name}.",
                           "Check the official site.", url, "="*15]
@@ -132,9 +132,9 @@ class DataBase:
         date = now.strftime('%Y/%m/%d')
 
         result = []
-        for tabel, url in self.tables.items():
+        for table, url in self.tables.items():
             name = self.site_names[table]
-            data = self.get_date(table=tabel, date=date)
+            data = self.get_date(table=table, date=date)
             if data is not None:
                 tmp = []
                 for info in data:
