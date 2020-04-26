@@ -21,9 +21,11 @@ from linebot.models import (
     TextComponent, SpacerComponent, IconComponent, ButtonComponent,
     SeparatorComponent, QuickReply, QuickReplyButton
 )
-from userid_db import del_userid, add_userid, get_usermajor
+from userinfo_db import User_DB
 
 app = Flask(__name__)
+
+user_db = User_DB()
 
 LINE_CHANNEL_ACCESS_TOKEN = os.environ["LINE_CHANNEL_ACCESS_TOKEN"]
 LINE_CHANNEL_SECRET = os.environ["LINE_CHANNEL_SECRET"]
@@ -172,7 +174,9 @@ translate_dic = {"文学部":"students in Arts and Letters",
 ### scraping apiと連携用コード
 import json
 import requests
-from push_message import push_message
+from push_message import Push_Message
+
+pusu_message_ = Push_Message()
 
 def now_info(major):
     data = {"major":major}
@@ -186,8 +190,8 @@ def push():
         data = request.get_json()
         if type(data) != dict:
             data = json.loads(data)
-        subject = True if data["subject"] == "true" else False
-        push_message(data["message"], data["majors"], subject)
+        subject = True if data["subject"] == "true" else False 
+        pusu_message_.push_message(data["message"], data["majors"], subject) 
         return jsonify({"status":"200"})
     except:
         abort(400)
@@ -226,128 +230,49 @@ def handle_message(event):
 
     if text == "Latest information":
         userid = event.source.user_id
-        department = get_usermajor(userid) # ユーザーのdepartmentを取得
-        if department:
-            information_all = now_info("全学生向け").split("\n&&&\n")
-            information_dep = now_info(department).split("\n&&&\n")
-            TextSendMessages_all = [TextSendMessage(text=info_) for info_ in information_all]
-            TextSendMessages_dep = [TextSendMessage(text=info_) for info_ in information_dep]
-            TextSendMessages_all.extend(TextSendMessages_dep)
-            line_bot_api.reply_message(event.reply_token, TextSendMessages_all)
-        # ユーザが所属を登録せずに『最新情報』と送信したとき
-        else:
-             line_bot_api.reply_message(event.reply_token,TextSendMessage(text="Please register your major first."))
-
-    if text =="Reregistrattion":
-        userid = event.source.user_id
-        del_userid(userid) # user情報を削除
-
-        line_bot_api.reply_message(
-            event.reply_token,
-            [TextSendMessage(text="Unregistered."),
-            TextSendMessage(
-            text="Please register your major again.",
-            quick_reply=QuickReply(
-                items=[QuickReplyButton(action=PostbackAction(label="Undergraduate", data="学部生")),
-                            QuickReplyButton(action=PostbackAction(label="Graduate", data="院生"))]
-            ))])
-
+        information_all = now_info("全学生向け").split("\n&&&\n") 
+        TextSendMessages_all = [TextSendMessage(text=info_) for info_ in information_all]
+        line_bot_api.reply_message(event.reply_token, TextSendMessages_all)
+      
+    # 他はオウム返し
     else:
         line_bot_api.reply_message(event.reply_token,[TextSendMessage(text=text)])
 
 # 友だち登録（またはブロック解除）されたときにユーザに学部を選択させる
 @handler.add(FollowEvent)
 def handle_follow(event):
-    line_bot_api.reply_message(
-            event.reply_token,
-            [TextSendMessage(text="Thank you for adding this LINE bot.\n\nWe will give you notification of Tohoku University information about Novel Coronavirus.\n\nPlease check a message about this LINE bot."),
-            TextSendMessage(
-            text="Choose your status; Undergraduate or Graduate. And then, choose your major.\n\nIf you made a misstake, please reregister from the button below.",
-            quick_reply=QuickReply(
-                items=[QuickReplyButton(action=PostbackAction(label="Undergraduate", data="学部生")),
-                            QuickReplyButton(action=PostbackAction(label="Graduate", data="院生"))]
-            ))]) # QuickReplyというリッチメッセージが起動してPostbackEventを発生させる
+    userid = event.source.user_id
+
+    # ユーザー情報をDBに追記
+    user_db.add_userid(userid)
+
+    # 登録した所属の最新情報を送信
+    TextSendMessages = [TextSendMessage(text="Thank you for adding this LINE bot.\n\nWe will give you notification of Tohoku University information about Novel Coronavirus.\n\nPlease check a message about this LINE bot.")]
+    information_all = now_info("全学生向け").split("\n&&&\n")
+    TextSendMessages_all = [TextSendMessage(text=info_) for info_ in information_all]
+    TextSendMessages.extend(TextSendMessages_all)
+    line_bot_api.reply_message(event.reply_token, TextSendMessages)
+
 
 # Postbackを受け取る
 @handler.add(PostbackEvent)
 def handle_postback(event):
-    if event.postback.data == "学部生":
-        line_bot_api.reply_message(
-            event.reply_token,
-            TextSendMessage(
-                text='Please swipe and slect your major.',
-                quick_reply=QuickReply(
-                    items=[QuickReplyButton(action=PostbackAction(label=translate_dic[department], data=department)) for department in major_dic["学部生"].keys()]
-                )))
-
-    elif event.postback.data == "院生" or event.postback.data == "ひとつ前に戻る":
-        items = [QuickReplyButton(action=PostbackAction(label=translate_dic[department], data=department)) for department in major_dic["院生"][:9]]
-        items.append(QuickReplyButton(action=PostbackAction(label="Show more", data="さらに表示する")))
-        line_bot_api.reply_message(
-            event.reply_token,
-            TextSendMessage(
-                text="Please swipe and slect your major.",
-                quick_reply=QuickReply(
-                    items=items
-                )))
-
-    elif event.postback.data == "さらに表示する":  # 『さらに表示する』が押されたら残りの所属を表示する
-        items = [QuickReplyButton(action=PostbackAction(label=translate_dic[department], data=department)) for department in major_dic["院生"][9:]]
-        items.append(QuickReplyButton(action=PostbackAction(label="Go back", data="ひとつ前に戻る")))
-        line_bot_api.reply_message(
-            event.reply_token,
-            TextSendMessage(
-                text='Please swipe and slect your major.',
-                quick_reply=QuickReply(
-                    items=items
-                )))
-
-    # 学部を選択した場合は、学科を選択してもらう
-    #elif event.postback.data[-1] == "部":
-    #    department = event.postback.data
-    #    line_bot_api.reply_message(
-    #        event.reply_token,
-    #        TextSendMessage(
-    #            text='Please swipe and slect your subject.',
-    #            quick_reply=QuickReply(
-    #                items=[QuickReplyButton(action=PostbackAction(label=translate_dic[subject], data=department + " " +subject)) for subject in major_dic["学部生"][department]]
-    #            )))
-
-    # 所属が選択された後、所属とuseridをcsvに追記
-    #elif event.postback.data[-1] == "科" or event.postback.data[-1] == "系" or event.postback.data[-1]=="院" or event.postback.data[-1] == "定":
-    elif event.postback.data[-1] == "科" or event.postback.data[-1] == "部":
-        user_major = event.postback.data
+    
+    # アンケート機能
+    if event.postback.data in "123":
         userid = event.source.user_id
-        #デフォルトの専攻
-        subject = ''
+        ans = event.postback.data
+        user_db.taburate_survey(userid, ans)
+        line_bot_api.reply_message(event.reply_token, TextSendMessage(text="ご回答ありがとうございました。"))
 
-        #if " " not in user_major: # 研究科を選択したときはsubjectは空
-        #    department = user_major
-        #    subject = ""
-        #else:                     # 学部を選択したときのみsubjectがある
-        #    department = user_major.split(" ")[0]
-        #    subject = user_major.split(" ")[1]
-
-        # ユーザー情報をDBに追記
-        add_userid(department, subject, userid)
-
-        # 登録した所属の最新情報を送信
-        #TextSendMessages = [TextSendMessage(text="Registered as\nmajor: {}\nsubject: {}".format(translate_dic[department], translate_dic[subject]))]
-        TextSendMessages = [TextSendMessage(text="Registered as {}".format(translate_dic[department]))]
-        information_all = now_info("全学生向け").split("\n&&&\n")
-        information_dep = now_info(department).split("\n&&&\n")
-        TextSendMessages_all = [TextSendMessage(text=info_) for info_ in information_all]
-        TextSendMessages_dep = [TextSendMessage(text=info_) for info_ in information_dep]
-        TextSendMessages.extend(TextSendMessages_all)
-        TextSendMessages.extend(TextSendMessages_dep)
-        line_bot_api.reply_message(event.reply_token, TextSendMessages)
 
 # ブロックされたときにDBからユーザー情報を削除
 @handler.add(UnfollowEvent)
 def handle_unfollow(event):
     userid = event.source.user_id
-    del_userid(userid)
+    user_db.del_userid(userid)
 
 
 if __name__ ==  "__main__":
-    app.run(host="0.0.0.0", port=8000)
+    port = int(os.environ.get('PORT', 8080))
+    app.run(host ='0.0.0.0',port = port)
