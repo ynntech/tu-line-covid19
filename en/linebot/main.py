@@ -41,8 +41,9 @@ from push_message import Push_Message
 pusu_message_ = Push_Message()
 
 def now_info():
+    headers = {"content-type": "application/json"}
     url = f"{os.environ['WEB_SERVER_DOMAIN']}/request/now"
-    response = requests.get(url)
+    response = requests.get(url, headers=headers)
     return response.json()["response"]
 
 @app.route("/push", methods=['POST'])
