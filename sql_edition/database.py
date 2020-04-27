@@ -110,20 +110,15 @@ class DataBase:
             return f"{'='*15}\n{major}に登録された情報はありません。\n公式サイトをご確認ください\n{url}\n{'='*15}"
         else:
             contents = []
-            count = 0
             for info in data:
                 contents.append(info)
-                count += 1
-                if count%18==0: # lineメッセージの文字制限のためセパレーター文字列を追加
-                    contents.append("&&&")
+            header = ["="*15, f"{major}に現在登録されている情報は{len(contents)}件です。", "="*15]
             if major == "全学生向け":
                 contents.append(f"{'='*15}\n東北大学オンライン授業ガイド\nhttps://sites.google.com/view/teleclass-tohoku/forstudents")
             contents.append(f"公式サイトもご確認ください\n{url}")
-            header = ["="*15, f"{major}に現在登録されている情報は{count}件です。", "="*15]
-            return "\n".join(header + contents)
+            return "\n".join(self.separate(header + contents))
 
     def new(self, major):
-        db = self.cursor
         url = self.major_index[major]
         data = self.get_new(table=major)
         if data is not None:
@@ -132,7 +127,7 @@ class DataBase:
                         "="*15]
             for info in data:
                 contents.append(info)
-            return "\n".join(contents)
+            return "\n".join(self.separate(contents))
         else:
             return None
 
@@ -146,7 +141,7 @@ class DataBase:
         if data is not None:
             data.append(f"公式サイトもご確認ください\n{url}")
             header = ["="*15, f"{major}に本日登録された情報は{len(data)-1}件です。", "="*15]
-            return "\n".join(header + data)
+            return "\n".join(self.separate(header + data))
         else:
             return f"{'='*15}\n{major}に本日登録された情報はありません。\n公式サイトをご確認ください\n{url}\n{'='*15}"
 
@@ -262,6 +257,19 @@ class DataBase:
             term = f"delete from {table} where id={_id}"
             db.execute(term)
             self.save()
+
+    def separate(self, obj):
+        result = []
+        tmp = ""
+        for string in obj:
+            if len(tmp) + len(string) <= 2000:
+                tmp += "\n"
+                tmp += string
+            else:
+                result.append("&&&")
+                tmp = string
+            result.append(string)
+        return result
 
     def __del__(self):
         self.save()
