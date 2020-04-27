@@ -26,14 +26,22 @@ class DataBase:
 # ユーザ情報を管理するクラス
 class User_DB(DataBase):
     # 渡されたuseridをDBから削除する
-    def del_userid(self, userid):
+    def del_userinfo(self, userid):
         sql_delete = f"delete from userinfo where userid='{userid}'"
         self.execute_sql(sql_delete)
 
-    # 渡されたユーザ情報をDBに登録する
-    def add_userid(self, department, subject, userid):
-        sql_add = f"insert into userinfo (department, subject, userid) values ('{department}', '{subject}', '{userid}')"
-        self.execute_sql(sql_add)
+    # 渡されたユーザの学年を登録する
+    def add_usergrade(self, grade, userid):
+        sql_add_grade = f"insert into userinfo (grade, userid) values ('{grade}', '{userid}')"
+        self.execute_sql(sql_add_grade)
+
+    # 渡されたユーザの所属をDBに登録する
+    def add_usermajor(self, department, subject, userid):
+        if subject[-2:]=="学科" or subject[-1]=="系" or subject=="未定":
+            sql_add_major = f"update userinfo set department='{department}', subject='{subject}' where userid='{userid}'"
+        else:
+            sql_add_major = f"insert into userinfo (department, subject, userid) values ('{department}','{subject}','{userid}')"
+        self.execute_sql(sql_add_major)
 
     # 渡されたuseridのdepartmentを返却（subjectには未対応）
     def get_usermajor(self, userid):
@@ -45,7 +53,7 @@ class User_DB(DataBase):
 
     # アンケート結果をDBに格納
     def taburate_survey(self, userid, ans):
-        sql_taburate = f"update userinfo set survey1='{ans}' where userid='{userid}'"
+        sql_taburate = f"update userinfo set grade='{ans}' where userid='{userid}'"
         self.execute_sql(sql_taburate)
 
 

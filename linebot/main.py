@@ -137,13 +137,13 @@ def handle_message(event):
 
     if text =="所属再登録":
         userid = event.source.user_id
-        user_db.del_userid(userid) # user情報を削除
+        user_db.del_userinfo(userid) # user情報を削除
 
         line_bot_api.reply_message(
             event.reply_token,
             [TextSendMessage(text="現在登録されていた学部、研究科は削除されました。"),
             TextSendMessage(
-            text="もう一度下のボタンから学部生か院生かを選択し、その後学部または研究科を選択してください。",
+            text="もう一度下のボタンから学部生か院生かを選択し、その後学年、学部または研究科を選択してください。",
             quick_reply=QuickReply(
                 items=[QuickReplyButton(action=PostbackAction(label="学部生", data="学部生")),
                             QuickReplyButton(action=PostbackAction(label="院生", data="院生"))]
@@ -159,7 +159,7 @@ def handle_follow(event):
             event.reply_token,
             [TextSendMessage(text="友だち追加ありがとうございます。\n\n登録した学部・研究科と、全学生向けのコロナウイルス関連のサイト掲載情報を配信します。\n\n概要・免責事項等は当アカウントのタイムライン投稿をご覧ください。"),
             TextSendMessage(
-            text="下のボタンから学部生か院生かを選択し、その後学部または研究科を選択してください。\n\n所属を間違えて登録した際は、画面下部のメニューバーより再登録することができます。",
+            text="下のボタンから学部生か院生かを選択し、その後学部または研究科を選択してください。\n\n所属を間違えて登録した際は、画面下部のメニューバーの『所属再登録』より再登録することができます。",
             quick_reply=QuickReply(
                 items=[QuickReplyButton(action=PostbackAction(label="学部生", data="学部生")),
                             QuickReplyButton(action=PostbackAction(label="院生", data="院生"))]
@@ -168,13 +168,38 @@ def handle_follow(event):
 # Postbackを受け取る
 @handler.add(PostbackEvent)
 def handle_postback(event):
+    userid = event.source.user_id
+    
     if event.postback.data == "学部生":
         line_bot_api.reply_message(
             event.reply_token,
             TextSendMessage(
+                text='下のボタンをスワイプして学年を選択してください。',
+                quick_reply=QuickReply(
+                    items=[QuickReplyButton(action=PostbackAction(label=f"{grade}年生", data=grade)) for grade in [1,2,3,4]]
+                )))
+
+    elif event.postback.data in "1234":
+        grade = event.postback.data
+        user_db.add_usergrade(grade, userid)
+        line_bot_api.reply_message(
+            event.reply_token,
+            [TextSendMessage(text=f"{grade}年生で登録しました"),
+            TextSendMessage(
                 text='下のボタンをスワイプして学部を選択してください。',
                 quick_reply=QuickReply(
                     items=[QuickReplyButton(action=PostbackAction(label=department, data=department)) for department in major_dic["学部生"].keys()]
+                ))])
+
+    # 学部を選択した場合は、学科を選択してもらう
+    elif event.postback.data[-1] == "部":
+        department = event.postback.data
+        line_bot_api.reply_message(
+            event.reply_token,
+            TextSendMessage(
+                text='下のボタンをスワイプして学科を選択してください。',
+                quick_reply=QuickReply(
+                    items=[QuickReplyButton(action=PostbackAction(label=subject, data=department + " " +subject)) for subject in major_dic["学部生"][department]]
                 )))
 
     elif event.postback.data == "院生" or event.postback.data == "ひとつ前に戻る":
@@ -199,21 +224,9 @@ def handle_postback(event):
                     items=items
                 )))
 
-    # 学部を選択した場合は、学科を選択してもらう
-    elif event.postback.data[-1] == "部":
-        department = event.postback.data
-        line_bot_api.reply_message(
-            event.reply_token,
-            TextSendMessage(
-                text='下のボタンをスワイプして学科を選択してください。',
-                quick_reply=QuickReply(
-                    items=[QuickReplyButton(action=PostbackAction(label=subject, data=department + " " +subject)) for subject in major_dic["学部生"][department]]
-                )))
-
     # 所属が選択された後、所属とuseridをcsvに追記
     elif event.postback.data[-1] == "科" or event.postback.data[-1] == "系" or event.postback.data[-1]=="院" or event.postback.data[-1] == "定":
         user_major = event.postback.data
-        userid = event.source.user_id
 
         if " " not in user_major: # 研究科を選択したときはsubjectは空
             department = user_major
@@ -223,7 +236,7 @@ def handle_postback(event):
             subject = user_major.split(" ")[1]
 
         # ユーザー情報をDBに追記
-        user_db.add_userid(department, subject, userid)
+        user_db.add_usermajor(department, subject, userid)
 
         # 登録した所属の最新情報を送信
         TextSendMessages = [TextSendMessage(text="{} {}で登録しました".format(department, subject))]
@@ -235,17 +248,17 @@ def handle_postback(event):
         TextSendMessages.extend(TextSendMessages_dep)
         line_bot_api.reply_message(event.reply_token, TextSendMessages)
 
-    elif event.postback.data in "123":
+    elif event.postback.data in "1_2_3_4_":
         userid = event.source.user_id
-        ans = event.postback.data
+        grade = event.postback.data[0]
         user_db.taburate_survey(userid, ans)
-        line_bot_api.reply_message(event.reply_token, TextSendMessage(text="ご回答ありがとうございました。"))
+        line_bot_api.reply_message(event.reply_token, TextSendMessage(text=f"『{grade}年生』で登録しました。"))
 
 # ブロックされたときにDBからユーザー情報を削除
 @handler.add(UnfollowEvent)
 def handle_unfollow(event):
     userid = event.source.user_id
-    user_db.del_userid(userid)
+    user_db.del_userinfo(userid)
 
 
 if __name__ ==  "__main__":
