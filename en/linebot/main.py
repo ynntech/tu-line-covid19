@@ -115,18 +115,6 @@ def handle_follow(event):
     line_bot_api.reply_message(event.reply_token, TextSendMessages)
 
 
-# Postbackを受け取る
-@handler.add(PostbackEvent)
-def handle_postback(event):
-
-    # アンケート機能
-    if event.postback.data in "123":
-        userid = event.source.user_id
-        ans = event.postback.data
-        user_db.taburate_survey(userid, ans)
-        line_bot_api.reply_message(event.reply_token, TextSendMessage(text="Thank you for your answering."))
-
-
 # ブロックされたときにDBからユーザー情報を削除
 @handler.add(UnfollowEvent)
 def handle_unfollow(event):
