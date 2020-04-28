@@ -2,6 +2,7 @@
 import os
 import re
 import datetime
+from collections import defaultdict
 
 from utils import News, Site
 
@@ -73,9 +74,10 @@ class TU(Site):
         return info_list
 
 class BCPNews:
-    def __init__(self, dt_tag, dd_tag):
+    def __init__(self, dt_tag, dd_tag, base_url):
         self.dt_tag = dt_tag
         self.dd_tag = dd_tag
+        self.base_url = base_url
         self.summary()
 
     # this should be overrided
@@ -84,6 +86,8 @@ class BCPNews:
         contents = self.dd_tag.text
         time = self.dt_tag.text
         href = self.dd_tag.find("a").get("href")
+        if href[:4] != "http":
+            href = self.base_url + href
         self.content = f"《{time}》\n{contents}\n{href}"
         self.time = self.timeobj(time)
 
@@ -94,6 +98,7 @@ class BCPNews:
 
 class BCP(Site):
     url = "https://www.bureau.tohoku.ac.jp/covid19BCP/latest-info.html"
+    base_url = "https://www.bureau.tohoku.ac.jp/covid19BCP/"
     majors = ["全学生向け"]
 
     def get(self):
@@ -101,12 +106,76 @@ class BCP(Site):
         # 以降、サイトに合わせて書き直す必要あり
         box = soup.find("section", id="new")
         info_list = self.abstract(box)
-        info_list = [BCPNews(info[0], info[1]) for info in info_list]
+        info_list = [BCPNews(info[0], info[1], self.base_url) for info in info_list]
         return self.dic(info_list)
 
     def abstract(self, box):
         dt_tags = box.find_all("dt")
         return [(dt_tag, dt_tag.find_next("dd")) for dt_tag in dt_tags]
+
+
+### 全学教育 ###
+class GenNews(News):
+    def __init__(self, info, base_url1, base_url2):
+        '''
+        <parameter>
+        tag (bs4.element.Tag) : single topic object
+        '''
+        self.tag = info["tag"]
+        self.time = info["time"]
+        self.base_url1 = base_url1
+        self.base_url2 = base_url2
+        self.summary()
+
+    # this should be overrided
+    # because the format of news will be different from the others
+    def summary(self):
+        contents = self.tag.text
+        href = self.tag.get("href")
+        if href[:4] != "http":
+            if href[0] == "/":
+                href = self.base_url2 + href
+            else:
+                href = self.base_url1 + href
+        self.content = f"《{self.time}》\n{contents}\n{href}"
+        self.time = self.timeobj(self.time)
+
+    def timeobj(self, timestr=""):
+        tmp = datetime.datetime.strptime(timestr, "%Y/%m/%d")
+        return datetime.date(tmp.year, tmp.month, tmp.day)
+
+
+class Gen(Site):
+    url = "http://www2.he.tohoku.ac.jp/zengaku/zengaku.html"
+    base_url1 = "http://www2.he.tohoku.ac.jp/zengaku/"
+    base_url2 = "http://www2.he.tohoku.ac.jp"
+    majors = ["全学教育"]
+
+    def get(self):
+        soup = self.request()
+        # 以降、サイトに合わせて書き直す必要あり
+        info_list = soup.find("table").find_all("tr")
+        info_list = [GenNews(info, self.base_url1, self.base_url2) for info in self.abstract(info_list)]
+        return self.dic(info_list)
+
+    def abstract(self, tags):
+        result = []
+        for tag in tags:
+            if tag.find("td", class_="date"):
+                time = tag.find("td", class_="date").text
+                if (tag.find("a") and time[:4] == "2020"):
+                    result.append({"tag":tag.find("a"), "time":time})
+        return result
+
+    def dic(self, info_list=[]):
+        tmp = datetime.datetime.strptime("2020年4月1日", "%Y年%m月%d日")
+        limit_date = datetime.date(tmp.year, tmp.month, tmp.day)
+        info_list = sorted(info_list, key=lambda x:x.time, reverse=True)
+        data = defaultdict(list)
+        for item in info_list:
+            if item.time >= limit_date:
+                data[item.time].append(item.content)
+        return data
 
 
 ### 文学部・文学研究科 ###
@@ -762,7 +831,7 @@ class KankyoNews(News):
     # this should be overrided
     # because the format of news will be different from the others
     def summary(self):
-        time = self.tag.find("p").text.split(" | ")[-1]
+        time = self.tag.find("p").text.split("|")[-1].split(" ")[-1]
         a_tags = self.tag.find_all("a")
         contents = self.tag.text.split(" | " + time)[-1].split("\r")[0]
         links = []

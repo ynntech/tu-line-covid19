@@ -11,6 +11,7 @@ class DataBase:
     DB = ""
     # major indexes
     major_index = {"全学生向け":"http://www.bureau.tohoku.ac.jp/covid19BCP/index.html",
+                   "全学教育":"http://www2.he.tohoku.ac.jp/zengaku/zengaku.html",
                    "文学部":"https://www.sal.tohoku.ac.jp/jp/news/covid19.html",
                    "文学研究科":"https://www.sal.tohoku.ac.jp/jp/news/covid19.html",
                    "教育学部":"https://www.sed.tohoku.ac.jp/news.html",
@@ -184,7 +185,11 @@ class DataBase:
                 if table in self.major_index.keys():
                     target = f"into {table}"
                     db.execute(f"select max(id) from {table}")
-                    _id = int(db.fetchone()[0])
+                    _id = db.fetchone()[0]
+                    if not _id:
+                        _id = 0
+                    else:
+                        _id = int(_id)
                     # 既にある情報は除外するため、同日にある情報の取得
                     exists_today = self.get_date(table=table, date=date)
                     if exists_today is None:
