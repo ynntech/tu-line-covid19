@@ -30,17 +30,9 @@ class User_DB(DataBase):
         sql_delete = f"delete from userinfo where userid='{userid}'"
         self.execute_sql(sql_delete)
 
-    # 渡されたユーザの学年を登録する
-    def add_usergrade(self, grade, userid):
-        sql_add_grade = f"insert into userinfo (grade, userid) values ('{grade}', '{userid}')"
-        self.execute_sql(sql_add_grade)
-
-    # 渡されたユーザの所属をDBに登録する
-    def add_usermajor(self, department, subject, userid):
-        if subject[-2:]=="学科" or subject[-1]=="系" or subject=="未定":
-            sql_add_major = f"update userinfo set department='{department}', subject='{subject}' where userid='{userid}'"
-        else:
-            sql_add_major = f"insert into userinfo (department, subject, userid) values ('{department}','{subject}','{userid}')"
+    # 渡されたユーザ情報をDBに登録する
+    def add_usermajor(self, department, subject, userid, grade):
+        sql_add_major = f"insert into userinfo (department, subject, userid, grade) values ('{department}','{subject}','{userid}','{grade}')"
         self.execute_sql(sql_add_major)
 
     # 渡されたuseridのdepartmentを返却（subjectには未対応）
@@ -50,6 +42,14 @@ class User_DB(DataBase):
         if not user_major: # ユーザが所属登録していないときはFalseを返す
             return False
         return user_major[0][0]
+
+    # 渡されたuseridのgradeを返却（subjectには未対応）
+    def get_usergrade(self, userid):
+        sql_search = f"select grade from userinfo where userid='{userid}'"
+        user_grade = self.get_info_list(sql_search)
+        if not user_grade: # ユーザが所属登録していないときはFalseを返す
+            return False
+        return user_grade[0][0]
 
     # アンケート結果をDBに格納
     def taburate_survey(self, userid, ans):

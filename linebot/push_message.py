@@ -14,6 +14,8 @@ class Push_Message(DataBase):
     def search_userid(self, user_major, subject=False):
         if user_major == "全学生向け":
             sql_search = "select userid from userinfo" #全行のuseridのリストを取得
+        elif user_major == "全学教育":
+            sql_search = "select userid from userinfo where grade='1' or grade='2'" # 学部生のみのuseridを取得
         else:
             if subject:
                 sql_search = f"select userid from userinfo where subject='{user_major}'" # subject列がuser_majorである行のuseridのリストを取得
@@ -44,4 +46,5 @@ class Push_Message(DataBase):
 
 
 if __name__ == "__main__":
-    push_message("更新されました\nhttps://www.eng.tohoku.ac.jp/news/detail-,-id,1561.html", "理学部")
+    pm = Push_Message()
+    pm.push_message("新着情報があります。\n公式サイトもご確認ください。\nhttps://www.bureau.tohoku.ac.jp/covid19BCP/index.html\n===============\n《2020/04/28》\n【お知らせ】東北大学緊急学生支援パッケージ〜Wi-Fiルーターの貸与について〜（申請締切：4月30日(木) 12:00まで）\nhttps://www.bureau.tohoku.ac.jp/covid19BCP/student.html#wi-fi\n《2020/04/27》\n学生のみなさんへ（東北大学緊急学生支援パッケージ～オンライン学習のためのネット環境支援について～）\nhttp://www.tohoku.ac.jp/japanese/2020/04/news20200427-01.html\n《2020/04/27》\n【予告】オンラインによる進学説明会・相談会、入試説明会の開催について\nhttps://www.tohoku.ac.jp/japanese/2020/04/news20200427-02.html",["全学教育"])

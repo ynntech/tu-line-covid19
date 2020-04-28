@@ -124,12 +124,21 @@ def handle_message(event):
     if text == "最新情報":
         userid = event.source.user_id
         department = user_db.get_usermajor(userid) # ユーザーのdepartmentを取得
+        grade = user_db.get_usergrade(userid)
         if department:
+            # 全学生向け
             information_all = now_info("全学生向け").split("\n&&&\n")
-            information_dep = now_info(department).split("\n&&&\n")
             TextSendMessages_all = [TextSendMessage(text=info_) for info_ in information_all]
+            # 全学教育
+            if grade in "1,2":
+                information_gen = now_info("全学教育").split("\n&&&\n")
+                TextSendMessages_gen = [TextSendMessage(text=info_) for info_ in information_gen]
+                TextSendMessages_all.extend(TextSendMessages_gen)
+            # 登録学部・研究科
+            information_dep = now_info(department).split("\n&&&\n")
             TextSendMessages_dep = [TextSendMessage(text=info_) for info_ in information_dep]
             TextSendMessages_all.extend(TextSendMessages_dep)
+
             line_bot_api.reply_message(event.reply_token, TextSendMessages_all)
         # ユーザが所属を登録せずに『最新情報』と送信したとき
         else:
@@ -159,7 +168,7 @@ def handle_follow(event):
             event.reply_token,
             [TextSendMessage(text="友だち追加ありがとうございます。\n\n登録した学部・研究科と、全学生向けのコロナウイルス関連のサイト掲載情報を配信します。\n\n概要・免責事項等は当アカウントのタイムライン投稿をご覧ください。"),
             TextSendMessage(
-            text="下のボタンから学部生か院生かを選択し、その後学部または研究科を選択してください。\n\n所属を間違えて登録した際は、画面下部のメニューバーの『所属再登録』より再登録することができます。",
+            text="下のボタンから学部生か院生かを選択し、その後、学部生は学年・学部・学科を、院生の方は研究科を選択してください。\n\n所属を間違えて登録した際は、画面下部のメニューバーの『所属再登録』より再登録することができます。",
             quick_reply=QuickReply(
                 items=[QuickReplyButton(action=PostbackAction(label="学部生", data="学部生")),
                             QuickReplyButton(action=PostbackAction(label="院生", data="院生"))]
@@ -176,30 +185,31 @@ def handle_postback(event):
             TextSendMessage(
                 text='下のボタンをスワイプして学年を選択してください。',
                 quick_reply=QuickReply(
-                    items=[QuickReplyButton(action=PostbackAction(label=f"{grade}年生", data=grade)) for grade in [1,2,3,4]]
+                    items=[QuickReplyButton(action=PostbackAction(label=f"{grade}年生", data=grade)) for grade in [1,2,3,4,5,6]]
                 )))
 
-    elif event.postback.data in "1234":
+    elif event.postback.data in "123456":
         grade = event.postback.data
-        user_db.add_usergrade(grade, userid)
+        # user_db.add_usergrade(grade, userid)
         line_bot_api.reply_message(
             event.reply_token,
             [TextSendMessage(text=f"{grade}年生で登録しました"),
             TextSendMessage(
                 text='下のボタンをスワイプして学部を選択してください。',
                 quick_reply=QuickReply(
-                    items=[QuickReplyButton(action=PostbackAction(label=department, data=department)) for department in major_dic["学部生"].keys()]
+                    items=[QuickReplyButton(action=PostbackAction(label=department, data=grade + "_" + department)) for department in major_dic["学部生"].keys()]
                 ))])
 
     # 学部を選択した場合は、学科を選択してもらう
     elif event.postback.data[-1] == "部":
-        department = event.postback.data
+        grade_department = event.postback.data
+        department = grade_department.split("_")[1]
         line_bot_api.reply_message(
             event.reply_token,
             TextSendMessage(
                 text='下のボタンをスワイプして学科を選択してください。',
                 quick_reply=QuickReply(
-                    items=[QuickReplyButton(action=PostbackAction(label=subject, data=department + " " +subject)) for subject in major_dic["学部生"][department]]
+                    items=[QuickReplyButton(action=PostbackAction(label=subject, data=grade_department + "_" +subject)) for subject in major_dic["学部生"][department]]
                 )))
 
     elif event.postback.data == "院生" or event.postback.data == "ひとつ前に戻る":
@@ -226,33 +236,47 @@ def handle_postback(event):
 
     # 所属が選択された後、所属とuseridをcsvに追記
     elif event.postback.data[-1] == "科" or event.postback.data[-1] == "系" or event.postback.data[-1]=="院" or event.postback.data[-1] == "定":
-        user_major = event.postback.data
+        grade_department_subject = event.postback.data
 
-        if " " not in user_major: # 研究科を選択したときはsubjectは空
-            department = user_major
+        if "_" not in grade_department_subject: # 研究科を選択したときはsubjectとgradeは空
+            department = grade_department_subject
             subject = ""
-        else:                     # 学部を選択したときのみsubjectがある
-            department = user_major.split(" ")[0]
-            subject = user_major.split(" ")[1]
+            grade = ""
+        else:                     # 学部を選択したときのみsubjectとgradeがある
+            grade = grade_department_subject.split("_")[0]
+            department = grade_department_subject.split("_")[1]
+            subject = grade_department_subject.split("_")[2]
 
         # ユーザー情報をDBに追記
-        user_db.add_usermajor(department, subject, userid)
+        user_db.add_usermajor(department, subject, userid, grade)
 
         # 登録した所属の最新情報を送信
         TextSendMessages = [TextSendMessage(text="{} {}で登録しました".format(department, subject))]
-        information_all = now_info("全学生向け").split("\n&&&\n")
-        information_dep = now_info(department).split("\n&&&\n")
-        TextSendMessages_all = [TextSendMessage(text=info_) for info_ in information_all]
-        TextSendMessages_dep = [TextSendMessage(text=info_) for info_ in information_dep]
-        TextSendMessages.extend(TextSendMessages_all)
-        TextSendMessages.extend(TextSendMessages_dep)
+        # 全学生向けの情報を追加
+        information_all = now_info("全学生向け").split("\n&&&\n") 
+        TextSendMessages.extend([TextSendMessage(text=info_) for info_ in information_all])
+        # 全学教育の情報追加
+        if grade in "1,2":
+            information_gen = now_info("全学教育").split("\n&&&\n") 
+            TextSendMessages.extend([TextSendMessage(text=info_) for info_ in information_gen])
+        # 登録した学部・研究科の情報を追加
+        information_dep = now_info(department).split("\n&&&\n") 
+        TextSendMessages.extend([TextSendMessage(text=info_) for info_ in information_dep])
+
         line_bot_api.reply_message(event.reply_token, TextSendMessages)
 
-    elif event.postback.data in "1_2_3_4_":
+    # 学年調査
+    elif event.postback.data in "1_2_3_4_5_6_":
         userid = event.source.user_id
         grade = event.postback.data[0]
-        user_db.taburate_survey(userid, ans)
-        line_bot_api.reply_message(event.reply_token, TextSendMessage(text=f"『{grade}年生』で登録しました。"))
+        user_db.taburate_survey(userid, grade)
+
+        text_message = [TextSendMessage(text=f"『{grade}年生』で登録しました。")]
+        if grade in "1,2": #1,2年生には全学教育の情報を送信
+            information_gen = now_info("全学教育").split("\n&&&\n")
+            text_message.extend([TextSendMessage(text=info_) for info_ in information_gen])
+
+        line_bot_api.reply_message(event.reply_token, text_message)
 
 # ブロックされたときにDBからユーザー情報を削除
 @handler.add(UnfollowEvent)
