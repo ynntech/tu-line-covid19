@@ -132,7 +132,6 @@ class DataBase:
             return None
 
     def today(self, major):
-        db = self.cursor
         url = self.major_index[major]
         now = datetime.datetime.now(datetime.timezone(
                                             datetime.timedelta(hours=9)))
@@ -144,6 +143,25 @@ class DataBase:
             return "\n".join(self.separate(header + data))
         else:
             return f"{'='*15}\n{major}に本日登録された情報はありません。\n公式サイトをご確認ください\n{url}\n{'='*15}"
+
+    def two_week(self, major):
+        url = self.major_index[major]
+        today = datetime.datetime.now(datetime.timezone(
+                                            datetime.timedelta(hours=9)))
+        two_week_res = []
+        for i in range(14):
+            date = today - datetime.timedelta(days=i)
+            date_str = date.strftime('%Y/%m/%d')
+            data = self.get_date(table=major, date=date_str)
+            if data is not None:
+                two_week_res += data
+
+        if len(two_week_res) > 0:
+            header = ["="*15, f"{date.strftime('%m/%d')}以降{major}に登録された情報は{len(two_week_res)}件です。", "="*15]
+            footer = [f"公式サイトもご確認ください\n{url}"]
+            return "\n".join(self.separate(header + two_week_res + footer))
+        else:
+            return f"{'='*15}\n{date.strftime('%m/%d')}以降{major}に本日登録された情報はありません。\n公式サイトをご確認ください\n{url}\n{'='*15}"
 
     def register(self, info, override=False):
         '''
