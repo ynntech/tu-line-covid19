@@ -22,7 +22,7 @@ def request_now():
     if major in db.major_index:
         return jsonify({
                         "status":"200",
-                        "response":db.now(major=major)
+                        "response":db.two_week(major=major)
                         })
     else:
         abort(400, "Invalid request")
