@@ -23,7 +23,7 @@ import os
 class Push_Survey:
     def __init__(self):
         # 送信したいbotのアクセストークンを指定
-        self.line_channel_access_token = "A6av3a9g5YpbRgu+vVnyQY9lGEKat4w2GAn0pNezVpkBwx6MxOZppBO+K+HmUJCJx32gSJFhr6RxkodACr14ls43PF8FWaU1RLMwKwHbd7SolJN30OOFZkQ2tAxnicFjwAWdJpbpl+XXUGGwjdRQzwdB04t89/1O/w1cDnyilFU="
+        self.line_channel_access_token = "linebot access token"
         self.line_bot_api = LineBotApi(self.line_channel_access_token)
 
 
@@ -35,7 +35,7 @@ class Push_Survey:
         return results
     
     def get_connection(self):
-        self.database_url = "postgres://kpohefvamrmrbi:8063f7f969e8e2c09c8e50193c7cd7d5d2a3eff1051748f69330544e6e644d9f@ec2-52-202-146-43.compute-1.amazonaws.com:5432/d5748slr2bi4on"
+        self.database_url = "db_url"
         return psycopg2.connect(self.database_url)
 
     def push_survey(self):
