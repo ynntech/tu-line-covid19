@@ -11,22 +11,29 @@ class Push_Message(DataBase):
         self.line_bot_api = LineBotApi(self.line_channel_access_token)
 
     # 全員のuseridをリストとして返却
-    def search_userid(self):
-        sql_search = f"select userid from userinfo"
+    def search_userid(self, major):
+        if major == "TU_ENGINEER": 
+            sql_search = f"select userid from userinfo where eng='1'"
+        elif major == "TU": 
+            sql_search = f"select userid from userinfo where eng='0'"
+
         target_ids = self.get_info_list(sql_search)
         return target_ids
 
-    def push_message(self, message):
+    def push_message(self, message, user_majors):
         """
         ==Parameters==
+            major             :今のところ、工学部か否かを識別するための引数
             message(str)      : ユーザに送りたいメッセージ
         ==Return==
             None
         """
-        target_ids = self.serch_userid()
-
-        for userid in target_ids:
-            try:                            #メッセージを送信したい相手のIDを入力
-                self.line_bot_api.push_message(userid[0], TextSendMessage(text=message))
-            except LineBotApiError as e:
-                print("error")
+        for user_major in user_majors:
+            target_ids = self.search_userid(user_major)
+            target_ids = [id_[0] for id_ in target_ids] # ネストになってるから普通のリストに直す
+            # 500ずつに分ける
+            for i in range(len(target_ids)//100+1):
+                try:                            
+                    self.line_bot_api.multicast(target_ids[i*100:(i+1)*100], TextSendMessage(text=message))
+                except LineBotApiError as e:
+                    print("error") 

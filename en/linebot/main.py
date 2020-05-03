@@ -40,10 +40,11 @@ from push_message import Push_Message
 
 pusu_message_ = Push_Message()
 
-def now_info():
+def now_info(major):
+    data = {"major":major}
     headers = {"content-type": "application/json"}
     url = f"{os.environ['WEB_SERVER_DOMAIN']}/request/now"
-    response = requests.get(url, headers=headers)
+    response = requests.get(url, headers=headers, json=json.dumps(data))
     return response.json()["response"]
 
 @app.route("/push", methods=['POST'])
@@ -52,7 +53,7 @@ def push():
         data = request.get_json()
         if type(data) != dict:
             data = json.loads(data)
-        pusu_message_.push_message(data["message"])
+        pusu_message_.push_message(data["message"], data["major"]) #%#%#%#%#%#% 新たにdata[major]を渡した #%#%#%#%#%#%
         return jsonify({"status":"200"})
     except:
         abort(400)
@@ -91,7 +92,11 @@ def handle_message(event):
 
     if text == "Latest information":
         userid = event.source.user_id
-        information_all = now_info().split("\n&&&\n")
+        print(user_db.is_eng(userid))
+        if user_db.is_eng(userid):
+            information_all = now_info("TU_ENGINEER").split("\n&&&\n")
+        else:
+            information_all = now_info("TU").split("\n&&&\n") 
         TextSendMessages_all = [TextSendMessage(text=info_) for info_ in information_all]
         line_bot_api.reply_message(event.reply_token, TextSendMessages_all)
 
@@ -102,24 +107,63 @@ def handle_message(event):
 # 友だち登録（またはブロック解除）されたときにユーザに学部を選択させる
 @handler.add(FollowEvent)
 def handle_follow(event):
-    userid = event.source.user_id
-
-    # ユーザー情報をDBに追記
-    user_db.add_userid(userid)
 
     # 登録した所属の最新情報を送信
     TextSendMessages = [TextSendMessage(text="Thank you for adding this LINE bot.\n\nWe will give you notification of Tohoku University information about Novel Coronavirus.\n\nPlease check a message about this LINE bot.")]
-    information_all = now_info().split("\n&&&\n")
-    TextSendMessages_all = [TextSendMessage(text=info_) for info_ in information_all]
-    TextSendMessages.extend(TextSendMessages_all)
-    line_bot_api.reply_message(event.reply_token, TextSendMessages)
+    line_bot_api.reply_message(
+            event.reply_token,
+            [TextSendMessage(text="Thank you for adding this LINE bot.\n\nWe will give you notification of Tohoku University information about Novel Coronavirus.\n\nPlease check a message about this LINE bot."),
+            TextSendMessage(
+            text="工学部からの情報配信を希望する方はyesを、希望しない方はnoを選択してください",
+            quick_reply=QuickReply(
+                items=[QuickReplyButton(action=PostbackAction(label="yes", data="yes")),
+                            QuickReplyButton(action=PostbackAction(label="no", data="no"))]
+            ))])
+
+# Postbackを受け取る
+@handler.add(PostbackEvent)
+def handle_postback(event):
+    userid = event.source.user_id
+    
+    if event.postback.data == "yes":
+        # ユーザー情報をDBに追記
+        user_db.add_userinfo(userid, 1)
+
+        TextSendMessages = [TextSendMessage(text="今後、工学部から配信を受け取ります。")]
+        information = now_info("TU_ENGINEER").split("\n&&&\n") 
+        TextSendMessages_all = [TextSendMessage(text=info_) for info_ in information]
+        TextSendMessages.extend(TextSendMessages_all)
+        line_bot_api.reply_message(event.reply_token, TextSendMessages)
+
+        
+
+    if event.postback.data == "no":
+        # ユーザー情報をDBに追記
+        user_db.add_userinfo(userid, 0)
+
+        TextSendMessages = [TextSendMessage(text="今後、工学部から配信を受け取りません。")]
+        information_all = now_info("TU").split("\n&&&\n") 
+        TextSendMessages_all = [TextSendMessage(text=info_) for info_ in information_all]
+        TextSendMessages.extend(TextSendMessages_all)
+        line_bot_api.reply_message(event.reply_token, TextSendMessages)
+
+        
+
+
+    # アンケート機能
+    if event.postback.data in "1234":
+        grade = event.postback.data 
+        userid = event.source.user_id
+        ans = event.postback.data
+        user_db.taburate_survey(userid, ans)
+        line_bot_api.reply_message(event.reply_token, TextSendMessage(text=f"『{grade}年生』で登録しました。"))
 
 
 # ブロックされたときにDBからユーザー情報を削除
 @handler.add(UnfollowEvent)
 def handle_unfollow(event):
     userid = event.source.user_id
-    user_db.del_userid(userid)
+    user_db.del_userinfo(userid)
 
 
 if __name__ ==  "__main__":
