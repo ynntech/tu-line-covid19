@@ -21,8 +21,8 @@ class BcpEnNews:
         if thumbnail[:4] != "http":
             thumbnail = self.base_url + thumbnail
         time = self.tag.find("div", class_="date").text
-        contents = self.tag.find("div", class_="headline").find("a")
-        href = contents.get("href")
+        contents = self.tag.find("div", class_="headline")
+        href = contents.find("a").get("href")
         if href[:4] != "http":
             href = self.base_url + href
         self.content = f"《{time}》\n{contents.text}\n{href}"
@@ -34,34 +34,17 @@ class BcpEnNews:
         return datetime.date(tmp.year, tmp.month, tmp.day)
 
 class BcpEn(Site):
-    url1 = "https://www.tohoku.ac.jp/en/news/university_news/index.html"
-    url2 = "https://www.tohoku.ac.jp/en/news/university_news/index_2.html"
+    url = "https://www.tohoku.ac.jp/en/news/university_news/information_of_covid_19.html"
     base_url = "https://www.tohoku.ac.jp"
     table = "TU"
 
     def get(self):
-        self.url = self.url1
         soup = self.request()
         # 以降、サイトに合わせて書き直す必要あり
         box = soup.find("div", class_="eventsIndex")
         info_list = box.find_all("li")
-        # index_2.htmlもパース
-        self.url = self.url2
-        soup = self.request()
-        box = soup.find("div", class_="eventsIndex")
-        info_list += box.find_all("li")
         info_list = [BcpEnNews(info, self.base_url) for info in info_list]
         return self.dic(info_list)
-
-    def dic(self, info_list=[]):
-        tmp = datetime.datetime.strptime("2020/3/27", "%Y/%m/%d")
-        limit_date = datetime.date(tmp.year, tmp.month, tmp.day)
-        info_list = sorted(info_list, key=lambda x:x.time, reverse=True)
-        data = defaultdict(list)
-        for item in info_list:
-            if item.time >= limit_date:
-                data[item.time].append(item.content)
-        return data
 
 
 ### Global Learning Center ###
@@ -78,8 +61,8 @@ class GLCNews(News):
     # this should be overrided
     # because the format of news will be different from the others
     def summary(self):
-        time = self.tag.find(class_="date").text
-        content = self.tag.find(class_="txt").text
+        time = self.tag.find("span", class_="date").text.split(" ")[0]
+        content = self.tag.find("h2").text
         a_tag = self.tag.find("a")
         if a_tag is not None:
             href = a_tag.get("href")
@@ -96,14 +79,15 @@ class GLCNews(News):
 
 
 class GLC(Site):
-    url = "https://www.insc.tohoku.ac.jp/english/"
+    url = "https://www.insc.tohoku.ac.jp/english/news/other/"
     base_url = "https://www.insc.tohoku.ac.jp"
     table = "GLC"
 
     def get(self):
         soup = self.request()
         # 以降、サイトに合わせて書き直す必要あり
-        info_list = soup.find("ul", id="cat_all").find_all("li")
+        info_list = soup.find("div", class_="newsList02").find_all("li")
+        #print(info_list)
         info_list = [GLCNews(info, self.base_url) for info in info_list]
         return self.dic(info_list)
 
@@ -111,10 +95,6 @@ class GLC(Site):
 ### 工学部英語版 ###
 class EngEnNews(News):
     def __init__(self, tag, base_url):
-        '''
-        <parameter>
-        tag (bs4.element.Tag) : single topic object
-        '''
         self.tag = tag
         self.base_url = base_url
         self.summary()
@@ -159,7 +139,7 @@ class EngEn(Site):
         info_list = self.abstract(info_list)
 
         info_list = [EngEnNews(info, self.base_url) for info in info_list]
-        return self.dic(info_list)
+        return self.dic(info_list, limit="2020/2/13")
 
     def abstract(self, tags=[]):
         result = []
@@ -169,13 +149,3 @@ class EngEn(Site):
                 result.append(tag)
                 exception.append(tag.text)
         return result
-
-    def dic(self, info_list=[]):
-        tmp = datetime.datetime.strptime("2020/2/13", "%Y/%m/%d")
-        limit_date = datetime.date(tmp.year, tmp.month, tmp.day)
-        info_list = sorted(info_list, key=lambda x:x.time, reverse=True)
-        data = defaultdict(list)
-        for item in info_list:
-            if item.time >= limit_date:
-                data[item.time].append(item.content)
-        return data
