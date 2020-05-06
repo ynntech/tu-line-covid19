@@ -83,8 +83,7 @@ def push():
         data = request.get_json()
         if type(data) != dict:
             data = json.loads(data)
-        subject = True if data["subject"] == "true" else False
-        pusu_message_.push_message(data["message"], data["majors"], subject)
+        pusu_message_.push_message(data["message"], data["major"])
         return jsonify({"status":"200"})
     except:
         abort(400)

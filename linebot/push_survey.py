@@ -30,7 +30,7 @@ import os
 class Push_Survey:
     def __init__(self):
         # 送信したいbotのアクセストークンを指定
-        self.line_channel_access_token = "linebot access token"
+        self.line_channel_access_token = "Z80OjPY9EG1HlnvIG5ikK7EXjYDbL28bJAHn0RLkdTcKEPU3ITzkO+0R8KOT+LCSZnKRYyge+CWDq/14NMqYS0FtzJiP12QKOYyUPHvfxnUdn8dSowtNB6jK97DrDSRR1zS8uaWeOzkQv4Y7Ss0R2QdB04t89/1O/w1cDnyilFU="
         self.line_bot_api = LineBotApi(self.line_channel_access_token)
 
     def get_info_list(self, sql):
@@ -41,12 +41,13 @@ class Push_Survey:
         return results
     
     def get_connection(self):
-        self.database_url = "db_url"
+        self.database_url = "postgres://ohpuvdblvbaowf:df2232602d6697a46a7968aa12ffc67b4bc885fc15b31133839661c71e139cf8@ec2-50-17-21-170.compute-1.amazonaws.com:5432/d3m1hku7dh4kt8"
         return psycopg2.connect(self.database_url)
 
     def push_survey(self):
         sql_search_und = "select userid from userinfo where department like '%部'"
         all_userid_und = self.get_info_list(sql_search_und)
+        all_userid_und = [["U93357ab618dbbc954468b2b556cb3a32"],["U90270fbcc310d31bb0c7bdbaa1e4b01c"]]
         sql_search_gra = "select userid from userinfo where department like '%研究科' or department like '%大学院'"
         all_userid_gra = self.get_info_list(sql_search_gra)
         # print(all_userid_gra)
