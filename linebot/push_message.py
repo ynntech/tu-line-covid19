@@ -67,6 +67,7 @@ class Push_Message(DataBase):
 
         target_ids = self.get_info_list(sql_search)
         return target_ids
+        
 
     def push_message(self, message, user_major):
         """
@@ -80,10 +81,13 @@ class Push_Message(DataBase):
         target_ids = self.search_userid(user_major)
         target_ids = [id_[0] for id_ in target_ids] # ネストになってるから普通のリストに直す
         print(target_ids)
+
+        messages = message.split("\n&&&\n")
         # 500ずつに分ける
         for i in range(len(target_ids)//100+1):
             try:                            
-                self.line_bot_api.multicast(target_ids[i*100:(i+1)*100], TextSendMessage(text=message))
+                TextSendMessages = [TextSendMessage(text=message_) for message_ in messages]
+                self.line_bot_api.multicast(target_ids[i*100:(i+1)*100], TextSendMessages)
                 print("multicastで送信できたよ！")
             except LineBotApiError as e:
                 print("error")  
