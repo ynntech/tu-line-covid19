@@ -5,10 +5,10 @@ import datetime
 import random
 
 class DataBase:
-    HOST = ""
-    USER = ""
-    PASSWD = ""
-    DB = ""
+    HOST = os.environ["MYSQL_HOST"]
+    USER = os.environ["MYSQL_USER"]
+    PASSWD = os.environ["MYSQL_PSSWD"]
+    DB = os.environ["MYSQL_DB"]
     # major indexes
     major_index = {"全学生向け":"http://www.bureau.tohoku.ac.jp/covid19BCP/index.html",
                    "全学教育":"http://www2.he.tohoku.ac.jp/zengaku/zengaku.html",
