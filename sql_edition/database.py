@@ -5,10 +5,10 @@ import datetime
 import random
 
 class DataBase:
-    HOST = ""
-    USER = ""
-    PASSWD = ""
-    DB = ""
+    HOST = os.environ["MYSQL_HOST"]
+    USER = os.environ["MYSQL_USER"]
+    PASSWD = os.environ["MYSQL_PSSWD"]
+    DB = os.environ["MYSQL_DB"]
     # major indexes
     major_index = {"全学生向け":"http://www.bureau.tohoku.ac.jp/covid19BCP/index.html",
                    "全学教育":"http://www2.he.tohoku.ac.jp/zengaku/zengaku.html",
@@ -78,16 +78,17 @@ class DataBase:
         else:
             return [r[0] for r in res]
 
-    def get_new(self, table):
+    def get_new(self, table, open_flag=True):
         self.save()
         # newの値が1のものを抽出
         term = f"select content from {table} where new=1 order by time desc"
         self.cursor.execute(term)
         res = self.cursor.fetchall()
         # 取得後全てのnewフラグを0にして既出情報扱いに
-        term = f"update {table} set new=0"
-        self.cursor.execute(term)
-        self.save()
+        if open_flag:
+            term = f"update {table} set new=0"
+            self.cursor.execute(term)
+            self.save()
         if len(res) == 0:
             return None
         else:
@@ -119,9 +120,9 @@ class DataBase:
             contents.append(f"公式サイトもご確認ください\n{url}")
             return "\n".join(self.separate(header + contents))
 
-    def new(self, major):
+    def new(self, major, open_flag=True):
         url = self.major_index[major]
-        data = self.get_new(table=major)
+        data = self.get_new(table=major, open_flag=open_flag)
         if data is not None:
             contents = [f"{major}の新規情報があります。",
                         "公式サイトもご確認ください。", url,
@@ -162,7 +163,16 @@ class DataBase:
             footer = [f"公式サイトもご確認ください\n{url}"]
             return "\n".join(self.separate(header + two_week_res + footer))
         else:
-            return f"{'='*15}\n{date.strftime('%m/%d')}以降{major}に本日登録された情報はありません。\n公式サイトをご確認ください\n{url}\n{'='*15}"
+            return f"{'='*15}\n{date.strftime('%m/%d')}以降{major}に登録された情報はありません。\n公式サイトをご確認ください\n{url}\n{'='*15}"
+
+    def check_new(self):
+        for major in self.major_index.keys():
+            data = self.get_new(table=major, open_flag=False)
+            print(major)
+            if data is None:
+                print("None")
+            else:
+                print(f"{len(data)}件")
 
     def register(self, info, override=False):
         '''

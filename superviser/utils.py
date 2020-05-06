@@ -46,15 +46,15 @@ class Site:
         return defaultdict(list)
 
     def request(self):
-        print(f"【{self.majors[0]}】接続中...")
+        print(f"{self.url}\n接続中...")
         response = requests.get(self.url)
         response.encoding = response.apparent_encoding
         soup = BeautifulSoup(response.text, "lxml")
         print("Done!")
         return soup
 
-    def dic(self, info_list=[]):
-        tmp = datetime.datetime.strptime("2020年2月1日", "%Y年%m月%d日")
+    def dic(self, info_list=[], limit="2020/02/01"):
+        tmp = datetime.datetime.strptime(limit, "%Y/%m/%d")
         limit_date = datetime.date(tmp.year, tmp.month, tmp.day)
         info_list = sorted(info_list, key=lambda x:x.time, reverse=True)
         data = defaultdict(list)

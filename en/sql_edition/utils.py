@@ -47,8 +47,8 @@ class Site:
         print("Done!")
         return soup
 
-    def dic(self, info_list=[]):
-        tmp = datetime.datetime.strptime("2020/2/1", "%Y/%m/%d")
+    def dic(self, info_list=[], limit="2020/2/1"):
+        tmp = datetime.datetime.strptime(limit, "%Y/%m/%d")
         limit_date = datetime.date(tmp.year, tmp.month, tmp.day)
         info_list = sorted(info_list, key=lambda x:x.time, reverse=True)
         data = defaultdict(list)
@@ -79,10 +79,11 @@ class Site:
 
 class Superviser:
     # posting timers
-    _posting = ["10:00", "15:00", "20:00"]
+    _posting = ["20:00"]
 
     def __init__(self, targets=[], timers=[], posting=None):
         self.db = DataBase()
+        self.router = Router()
         self.slack_webhook_url = os.environ["SLACK_WEBHOOK_URL"]
         self.heroku_domain = os.environ["HEROKU_DOMAIN"]
         self._targets = targets
@@ -122,12 +123,11 @@ class Superviser:
 
     def call(self):
         print("Checking new information.")
-        try:
-            result = self.db.new()
-        except:
-            result = None
-        if result is not None:
-            self.push(message=result)
+        route = self.router.routing()
+        if len(route) > 0:
+            for major, v in route.items():
+                message = "\n&&&\n".join(v)
+                self.push(message=message, major=major)
             print(f"Message pushed")
         else:
             print("No new information")
@@ -172,8 +172,8 @@ class Superviser:
         return "\n".join(self._timers)
 
     ### line bot apiとの連携用
-    def push(self, message):
-        data = {"message":message}
+    def push(self, message, major):
+        data = {"message":message, "major":major}
         res = requests.post(f"{self.heroku_domain}/push", json=json.dumps(data))
         if res.status_code == 200:
             text = f"【英語版 更新報告】\n内容：{message}"
@@ -193,3 +193,99 @@ class Superviser:
         else:
             error = "英語版 LINE botサーバーに問題が生じたぞ！さぁ直すんだ"
             requests.post(self.slack_webhook_url, data=json.dumps({'text':error}))
+
+
+class Router:
+    def __init__(self):
+        self.db = DataBase()
+
+    def all_week(self):
+        # Reset data dictionary
+        data = {}
+        tables = self.db.tables
+        for table in tables.keys():
+            try:
+                result = self.db.two_week(table=table)
+            except:
+                result = None
+            data[table] = result
+        if data["TU"] is not None:
+            if data["GLC"] is not None:
+                all_news = data["TU"] + "\n&&&\n" + data["GLC"]
+            else:
+                all_news = data["TU"]
+        else:
+            if data["GLC"] is not None:
+                all_news = data["GLC"]
+            else:
+                all_news = None
+        result = {"TU":all_news}
+        for k in data.keys():
+            if str(k) not in ["TU", "GLC"]:
+                result[k] = data[k]
+        return result
+
+    def all_new(self):
+        # Reset data dictionary
+        data = {}
+        tables = self.db.tables
+        for table in tables.keys():
+            try:
+                result = self.db.new(table=table)
+            except:
+                result = None
+            data[table] = result
+        if data["TU"] is not None:
+            if data["GLC"] is not None:
+                all_news = data["TU"] + "\n&&&\n" + data["GLC"]
+            else:
+                all_news = data["TU"]
+        else:
+            if data["GLC"] is not None:
+                all_news = data["GLC"]
+            else:
+                all_news = None
+        result = {"TU":all_news}
+        for k in data.keys():
+            if str(k) not in ["TU", "GLC"]:
+                result[k] = data[k]
+        return result
+
+    def now(self, major):
+        news = self.all_week()
+        major = major.split("_")
+        if len(major) == 1:
+            if major[0] == "TU":
+                return news["TU"]
+            else:
+                return None
+        elif len(major) == 2:
+            if major[0] == "TU":
+                result = []
+                if news["TU"] is not None:
+                    result.append(news["TU"])
+                if "not" not in major[1]:
+                    table = major[1]
+                    if table in news:
+                        if news[table] is not None:
+                            result.append(news[table])
+                if len(result) > 0:
+                    return "\n&&&\n".join(result)
+                else:
+                    return None
+            else:
+                return None
+        else:
+            None
+
+    def routing(self):
+        news = self.all_new()
+        route = {}
+
+        if news["TU"] is not None:
+            if news["ENGINEER"] is not None:
+                route["TU_ENGINEER"] = [news["TU"], news["ENGINEER"]]
+                route["TU_notENGINEER"] = [news["TU"]]
+            else:
+                route["TU"] = [news["TU"]]
+        return route

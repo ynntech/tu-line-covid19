@@ -156,7 +156,7 @@ class Gen(Site):
         # 以降、サイトに合わせて書き直す必要あり
         info_list = soup.find("table").find_all("tr")
         info_list = [GenNews(info, self.base_url1, self.base_url2) for info in self.abstract(info_list)]
-        return self.dic(info_list)
+        return self.dic(info_list, limit="2020/4/1")
 
     def abstract(self, tags):
         result = []
@@ -166,16 +166,6 @@ class Gen(Site):
                 if (tag.find("a") and time[:4] == "2020"):
                     result.append({"tag":tag.find("a"), "time":time})
         return result
-
-    def dic(self, info_list=[]):
-        tmp = datetime.datetime.strptime("2020年4月1日", "%Y年%m月%d日")
-        limit_date = datetime.date(tmp.year, tmp.month, tmp.day)
-        info_list = sorted(info_list, key=lambda x:x.time, reverse=True)
-        data = defaultdict(list)
-        for item in info_list:
-            if item.time >= limit_date:
-                data[item.time].append(item.content)
-        return data
 
 
 ### 文学部・文学研究科 ###
