@@ -125,7 +125,7 @@ class Superviser:
         print("Checking new information.")
         route = self.router.routing()
         if len(route) > 0:
-            for major, v in route.keys():
+            for major, v in route.items():
                 message = "\n&&&\n".join(v)
                 self.push(message=message, major=major)
             print(f"Message pushed")

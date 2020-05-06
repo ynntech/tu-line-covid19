@@ -163,7 +163,7 @@ class DataBase:
             footer = [f"公式サイトもご確認ください\n{url}"]
             return "\n".join(self.separate(header + two_week_res + footer))
         else:
-            return f"{'='*15}\n{date.strftime('%m/%d')}以降{major}に本日登録された情報はありません。\n公式サイトをご確認ください\n{url}\n{'='*15}"
+            return f"{'='*15}\n{date.strftime('%m/%d')}以降{major}に登録された情報はありません。\n公式サイトをご確認ください\n{url}\n{'='*15}"
 
     def check_new(self):
         for major in self.major_index.keys():

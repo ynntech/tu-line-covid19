@@ -40,7 +40,7 @@ class Site:
         return defaultdict(list)
 
     def request(self):
-        print(f"【{self.majors[0]}】接続中...")
+        print(f"【{self.majors}】接続中...")
         response = requests.get(self.url)
         response.encoding = response.apparent_encoding
         soup = BeautifulSoup(response.text, "lxml")
@@ -124,7 +124,7 @@ class Superviser:
         print("新着情報がないが確認します。")
         route = self.router.routing()
         if len(route) > 0:
-            for major, v in route.keys():
+            for major, v in route.items():
                 message = "\n&&&\n".join(v)
                 self.push(message=message, major=major)
             print(f"配信完了 >> {major}")
@@ -573,7 +573,7 @@ class Router:
                                                                     news["全学教育"]]
                                         route[f"{major}_not全学教育"] = [news["全学生向け"]]
                             else:
-                                if len(self.mejors[major]) == 0:
+                                if len(self.majors[major]) == 0:
                                     route[major] = [news["全学生向け"]]
                                     if major == main_major:
                                         route[major].append(news[main_major])
@@ -680,7 +680,7 @@ class Router:
                                                                 news["全学教育"]]
                                     route[f"{major}_not全学教育"] = [news["全学生向け"]]
                         else:
-                            if len(self.mejors[major]) == 0:
+                            if len(self.majors[major]) == 0:
                                 route[major] = [news["全学生向け"]]
                                 if major in major_tmp:
                                     route[major].append(news[major])
