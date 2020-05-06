@@ -1,4 +1,5 @@
 #-*- coding: utf-8 -*-
+import os
 import MySQLdb
 import json
 import datetime
