@@ -10,19 +10,26 @@ app.config['JSON_AS_ASCII'] = False
 app.config["JSON_SORT_KEYS"] = False
 
 db = DataBase()
-TOKEN = ""
+TOKEN = os.environ["WEB_SERVER_TOKEN"]
 
 # 最新情報の取得API
 @app.route("/request/now", methods=["POST"])
 def request_now():
+    global db
     data = request.get_json()
     if type(data) != dict:
         data = json.loads(data)
     major = data["major"]
     if major in db.major_index:
+        try:
+            res = db.two_week(major=major)
+        except:
+            del db
+            db = DataBase()
+            res = db.two_week(major=major)
         return jsonify({
                         "status":"200",
-                        "response":db.two_week(major=major)
+                        "response":res
                         })
     else:
         abort(400, "Invalid request")
@@ -30,6 +37,7 @@ def request_now():
 # Google formからの受け取りAPI
 @app.route("/request/push", methods=["POST"])
 def request_push():
+    global db
     data = request.get_json()
     if type(data) != dict:
         data = json.loads(data)
@@ -60,6 +68,6 @@ def test_get():
 
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port="port", threaded=True)
+    app.run(host="0.0.0.0", port=os.environ["API_SERVER_PORT"], threaded=True)
     db.exit()
     sys.exit()

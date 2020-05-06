@@ -255,7 +255,7 @@ class Router:
         news = self.all_week()
         major = major.split("_")
         if len(major) == 1:
-            if major == "TU":
+            if major[0] == "TU":
                 return news["TU"]
             else:
                 return None
