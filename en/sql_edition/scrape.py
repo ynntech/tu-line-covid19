@@ -8,8 +8,8 @@ if __name__ == "__main__":
     _glc = GLC()
     _eng = EngEn()
     targets = [_bcp, _glc, _eng]
-    timers = ["09:30", "14:30", "19:30"]
-    posting = ["10:00", "15:00", "20:00"]
+    timers = ["19:30"]
+    posting = ["20:00"]
 
     supervise = Superviser(targets=targets, timers=timers, posting=posting)
     supervise.run()
