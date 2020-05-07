@@ -96,7 +96,7 @@ def handle_message(event):
         if user_db.is_eng(userid):
             information_all = now_info("TU_ENGINEER").split("\n&&&\n")
         else:
-            information_all = now_info("TU").split("\n&&&\n") 
+            information_all = now_info("TU").split("\n&&&\n")
         TextSendMessages_all = [TextSendMessage(text=info_) for info_ in information_all]
         line_bot_api.reply_message(event.reply_token, TextSendMessages_all)
 
@@ -109,54 +109,69 @@ def handle_message(event):
 def handle_follow(event):
 
     # 登録した所属の最新情報を送信
-    TextSendMessages = [TextSendMessage(text="Thank you for adding this LINE bot.\n\nWe will give you notification of Tohoku University information about Novel Coronavirus.\n\nPlease check a message about this LINE bot.")]
+    #TextSendMessages = [TextSendMessage(text="Thank you for adding this LINE bot.\n\nWe will give you notification of Tohoku University information about Novel Coronavirus.\n\nPlease check a message about this LINE bot.")]
+    #line_bot_api.reply_message(
+    #        event.reply_token,
+    #        [TextSendMessage(text="Thank you for adding this LINE bot.\n\nWe will give you notification of Tohoku University information about Novel Coronavirus.\n\nPlease check a message about this LINE bot."),
+    #        TextSendMessage(
+    #        text="工学部からの情報配信を希望する方はyesを、希望しない方はnoを選択してください",
+    #        quick_reply=QuickReply(
+    #            items=[QuickReplyButton(action=PostbackAction(label="yes", data="yes")),
+    #                        QuickReplyButton(action=PostbackAction(label="no", data="no"))]
+    #        ))])
+    ### added by kenichi ###
     line_bot_api.reply_message(
             event.reply_token,
-            [TextSendMessage(text="Thank you for adding this LINE bot.\n\nWe will give you notification of Tohoku University information about Novel Coronavirus.\n\nPlease check a message about this LINE bot."),
+            [TextSendMessage(text="Thank you for adding this LINE bot.\n\nWe will give you notification of Tohoku University information about Novel Coronavirus."),
             TextSendMessage(
-            text="工学部からの情報配信を希望する方はyesを、希望しない方はnoを選択してください",
+            text="If you also want to get news about School of Engineering, please tap yes",
             quick_reply=QuickReply(
                 items=[QuickReplyButton(action=PostbackAction(label="yes", data="yes")),
                             QuickReplyButton(action=PostbackAction(label="no", data="no"))]
             ))])
+    ### end ###
 
 # Postbackを受け取る
 @handler.add(PostbackEvent)
 def handle_postback(event):
     userid = event.source.user_id
-    
+
     if event.postback.data == "yes":
         # ユーザー情報をDBに追記
         user_db.add_userinfo(userid, 1)
 
-        TextSendMessages = [TextSendMessage(text="今後、工学部から配信を受け取ります。")]
-        information = now_info("TU_ENGINEER").split("\n&&&\n") 
-        TextSendMessages_all = [TextSendMessage(text=info_) for info_ in information]
-        TextSendMessages.extend(TextSendMessages_all)
+        #TextSendMessages = [TextSendMessage(text="今後、工学部から配信を受け取ります。")]
+        information = now_info("TU_ENGINEER").split("\n&&&\n")
+        #TextSendMessages_all = [TextSendMessage(text=info_) for info_ in information]
+        #TextSendMessages.extend(TextSendMessages_all)
+        ### added by kenichi ###
+        TextSendMessages = [TextSendMessage(text=info_) for info_ in information]
+        ### end ###
         line_bot_api.reply_message(event.reply_token, TextSendMessages)
-
-        
 
     if event.postback.data == "no":
         # ユーザー情報をDBに追記
         user_db.add_userinfo(userid, 0)
 
-        TextSendMessages = [TextSendMessage(text="今後、工学部から配信を受け取りません。")]
-        information_all = now_info("TU").split("\n&&&\n") 
-        TextSendMessages_all = [TextSendMessage(text=info_) for info_ in information_all]
-        TextSendMessages.extend(TextSendMessages_all)
+        #TextSendMessages = [TextSendMessage(text="今後、工学部から配信を受け取りません。")]
+        information_all = now_info("TU").split("\n&&&\n")
+        #TextSendMessages_all = [TextSendMessage(text=info_) for info_ in information_all]
+        #TextSendMessages.extend(TextSendMessages_all)
+        ### added by kenichi ###
+        TextSendMessages = [TextSendMessage(text=info_) for info_ in information_all]
+        ### end ###
         line_bot_api.reply_message(event.reply_token, TextSendMessages)
-
-        
-
 
     # アンケート機能
     if event.postback.data in "1234":
-        grade = event.postback.data 
+        grade = event.postback.data
         userid = event.source.user_id
         ans = event.postback.data
         user_db.taburate_survey(userid, ans)
-        line_bot_api.reply_message(event.reply_token, TextSendMessage(text=f"『{grade}年生』で登録しました。"))
+        #line_bot_api.reply_message(event.reply_token, TextSendMessage(text=f"『{grade}年生』で登録しました。"))
+        ### added by kenichi ###
+        line_bot_api.reply_message(event.reply_token, TextSendMessage(text=f"successfully registerd as grade {grade}"))
+        ### end ###
 
 
 # ブロックされたときにDBからユーザー情報を削除
