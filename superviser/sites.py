@@ -109,7 +109,8 @@ class BCP(Site):
         # 以降、サイトに合わせて書き直す必要あり
         box = soup.find("section", id="new")
         info_list = self.abstract(box)
-        info_list = [BCPNews(info[0], info[1], self.base_url) for info in info_list]
+        info_list = [BCPNews(info[0], info[1], self.base_url)
+                     for info in info_list]
         return self.dic(info_list)
 
     def abstract(self, box):
@@ -159,7 +160,8 @@ class Gen(Site):
         soup = self.request()
         # 以降、サイトに合わせて書き直す必要あり
         info_list = soup.find("table").find_all("tr")
-        info_list = [GenNews(info, self.base_url1, self.base_url2) for info in self.abstract(info_list)]
+        info_list = [GenNews(info, self.base_url1, self.base_url2)
+                     for info in self.abstract(info_list)]
         return self.dic(info_list)
 
     def abstract(self, tags):
@@ -168,13 +170,13 @@ class Gen(Site):
             if tag.find("td", class_="date"):
                 time = tag.find("td", class_="date").text
                 if (tag.find("a") and time[:4] == "2020"):
-                    result.append({"tag":tag.find("a"), "time":time})
+                    result.append({"tag": tag.find("a"), "time": time})
         return result
 
     def dic(self, info_list=[]):
         tmp = datetime.datetime.strptime("2020年4月1日", "%Y年%m月%d日")
         limit_date = datetime.date(tmp.year, tmp.month, tmp.day)
-        info_list = sorted(info_list, key=lambda x:x.time, reverse=True)
+        info_list = sorted(info_list, key=lambda x: x.time, reverse=True)
         data = defaultdict(list)
         for item in info_list:
             if item.time >= limit_date:
@@ -268,7 +270,8 @@ class Sed(Site):
         stick2.time = stick1.timeobj(timestr="4.25")
         stick2.content = f"《4.25》\nコンピュータ実習室の月間利用スケジュールを掲載\n{stick2_url1}\n{stick2_url2}"
         ###
-        info_list = [SedNews(info, self.base_url) for info in self.abstract(info_list)]
+        info_list = [SedNews(info, self.base_url)
+                     for info in self.abstract(info_list)]
         info_list.append(stick1)
         info_list.append(stick2)
         return self.dic(info_list)
@@ -281,6 +284,8 @@ class Sed(Site):
         return result
 
 ### 法学部・法学研究科/法科大学院・公共政策大学院 ###
+
+
 class LawNews:
     def __init__(self):
         self.time = ""
@@ -410,8 +415,9 @@ class Sci(Site):
                         exception.append(tag.text)
         return result, exception
 
-
 ### 医学部・医学系研究科 ###
+
+
 class MedNews(News):
     def __init__(self, tag, base_url):
         '''
@@ -431,7 +437,11 @@ class MedNews(News):
         elif self.tag.text == "新型コロナウイルス感染症に関する本研究科の対応について-医学系研究科長メッセージ":
             time = "4/10"
             contents = "新型コロナウイルス感染症に関する本研究科の対応について-医学系研究科長メッセージ"
+        elif self.tag.text == "(大学院生）【重要】今学期の授業実施方法及び履修登録期間の延長について":
+            time = "5/1"
+            contents = "(大学院生）【重要】今学期の授業実施方法及び履修登録期間の延長について"
         else:
+            print(self.tag.text)
             time = re.findall(r"\d+/\d+", self.tag.text)[-1]
             contents = self.tag.text[:(-len(time))]
         href = "#" + self.tag.find("a").get("id")
@@ -455,6 +465,7 @@ class Med(Site):
         # 以降、サイトに合わせて書き直す必要あり
         info_list = soup.find(
             "div", class_="wrap_contarea sp_contarea area_u-layer_cont").find_all("h4")[:-1]
+        print(info_list)
         info_list = [MedNews(info, self.url) for info in info_list]
         return self.dic(info_list)
 
@@ -501,7 +512,8 @@ class Dent(Site):
         soup = self.request()
         # 以降、サイトに合わせて書き直す必要あり
         info_list = soup.find("div", id="latest").find_all("li")
-        info_list = [DentNews(info, self.base_url) for info in self.abstract(info_list)]
+        info_list = [DentNews(info, self.base_url)
+                     for info in self.abstract(info_list)]
         return self.dic(info_list)
 
     def abstract(self, tags):
@@ -559,7 +571,7 @@ class Pharm(Site):
     def abstract(self, a_tags):
         info_list = []
         for tag in a_tags:
-            if tag.text not in  ["こちら", "東北大学新型コロナウイルスBCP対応ガイド", "新型コロナウイルス感染の疑いのある症状が出た場合の連絡",
+            if tag.text not in ["こちら", "東北大学新型コロナウイルスBCP対応ガイド", "新型コロナウイルス感染の疑いのある症状が出た場合の連絡",
                                 "https://www.tohoku.ac.jp/japanese/2020/04/news20200417-00.html"]:
                 href = tag.get("href")
                 if (href[0:4] == "http") and (href.split("/")[2] != "www.tohoku.ac.jp"):
