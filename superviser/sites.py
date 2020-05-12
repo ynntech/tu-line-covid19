@@ -579,26 +579,20 @@ class Pharm(Site):
         return info_list
 
 
-class EngENNews(News):
+### 工学部・工学研究科 ###
+class EngNews(News):
     def __init__(self, tag, base_url):
-        '''
-        <parameter>
-        tag (bs4.element.Tag) : single topic object
-        '''
         self.tag = tag
         self.base_url = base_url
         self.summary()
 
-    # this should be overrided
-    # because the format of news will be different from the others
     def summary(self):
-        time_tag = self.tag.find_next("th")
-        time_split = time_tag.text.split("/")
+        time_tag = self.tag.find_next("td")
+        time_split = time_tag.text.split(".")
         print(f"time_split is {time_split}")
 
-        # time = "{}/{}/{}".format(time_split[0], re.search(
-        #     r'\d+', (time_split[1])).group())
-        time = "{}/{}/{}".format(time_split[0], time_split[1], time_split[2])
+        time = "{}.{}".format(time_split[0], re.search(
+            r'\d+', (time_split[1])).group())
         a_tag = self.tag.find("a")
         if a_tag is not None:
             href = a_tag.get("href")
@@ -606,30 +600,49 @@ class EngENNews(News):
                 href = self.base_url + href
             self.content = f"《{time}》\n{a_tag.text}\n{href}"
         else:
-            content = "\n".join(time_tag.find_next("th").text.split())
-            url = "https://www.eng.tohoku.ac.jp/english/news/news4/"
+            content = "\n".join(time_tag.find_next("td").text.split())
+            url = "https://www.eng.tohoku.ac.jp/news/detail-,-id,1561.html"
             self.content = f"《{time}》\n{content}\n{url}"
         self.time = self.timeobj(time)
 
     def timeobj(self, timestr=""):
-        tmp = datetime.datetime.strptime(timestr, "%Y/%m/%d")
+        year = "2020."
+        tmp = datetime.datetime.strptime(year + timestr, "%Y.%m.%d")
         return datetime.date(tmp.year, tmp.month, tmp.day)
 
 
-class EngEN(Site):
+class Eng(Site):
     path = os.path.join("..", os.path.join("sites_db", "eng.pickle"))
-    url = "https://www.eng.tohoku.ac.jp/english/news/news4/"
-    base_url = "https://www.eng.tohoku.ac.jp/english"
-    majors = ["School of Engineering", "Graduate School of Engineering"]
+    url = "https://www.eng.tohoku.ac.jp/news/detail-,-id,1561.html"
+    base_url = "https://www.eng.tohoku.ac.jp"
+    majors = ["工学部", "工学研究科"]
 
     def get(self):
         soup = self.request()
         # 以降、サイトに合わせて書き直す必要あり
-        info_list = soup.find(class_="table nt news").find_all("tr")
-        print(f"info_list is {info_list}")
+        info_list = soup.find(id="main").find_all("tr")[1:]
         info_list = self.abstract(info_list)
 
-        info_list = [EngENNews(info, self.base_url) for info in info_list]
+        # 固定情報
+        stick1 = EngNews(info_list[0], self.base_url)
+        contents = ["《4/10》",
+                    "【新型コロナウイルス感染拡大防止のための自宅待機のお願い】",
+                    "令和2年4月9日(木)から5月6日(水)まで、原則として登校を禁止し、研究室活動を制限します",
+                    "https://www.eng.tohoku.ac.jp/news/detail-,-id,1582.html",
+                    "https://www.eng.tohoku.ac.jp/news/detail-,-id,1581.html"]
+        stick1.time = stick1.timeobj(timestr="4.10")
+        stick1.content = "\n".join(contents)
+
+        stick2 = EngNews(info_list[0], self.base_url)
+        contents = ["《4/10》",
+                    "【全学生 要回答】東北大ID受取確認(新入生対象), 遠隔授業の受講環境等の調査を実施しています。",
+                    "https://www.eng.tohoku.ac.jp/news/detail-,-id,1576.html#survey"]
+        stick2.time = stick1.timeobj(timestr="4.10")
+        stick2.content = "\n".join(contents)
+        sticks = [stick1, stick2]
+
+        info_list = [EngNews(info, self.base_url) for info in info_list]
+        info_list = sticks + info_list
         return self.dic(info_list)
 
     def abstract(self, tags=[]):
@@ -641,69 +654,70 @@ class EngEN(Site):
                 exception.append(tag.text)
         return result
 
-
-# 工学部英語
-class EngENNews(News):
-    def __init__(self, tag, base_url):
-        '''
-        <parameter>
-        tag (bs4.element.Tag) : single topic object
-        '''
-        self.tag = tag
-        self.base_url = base_url
-        self.summary()
-
-    # this should be overrided
-    # because the format of news will be different from the others
-    def summary(self):
-        time_tag = self.tag.find_next("th")
-        time_split = time_tag.text.split("/")
-        print(f"time_split is {time_split}")
-
-        # time = "{}/{}/{}".format(time_split[0], re.search(
-        #     r'\d+', (time_split[1])).group())
-        time = "{}/{}/{}".format(time_split[0], time_split[1], time_split[2])
-        a_tag = self.tag.find("a")
-        if a_tag is not None:
-            href = a_tag.get("href")
-            if href[0:4] != "http":
-                href = self.base_url + href
-            self.content = f"《{time}》\n{a_tag.text}\n{href}"
-        else:
-            content = "\n".join(time_tag.find_next("th").text.split())
-            url = "https://www.eng.tohoku.ac.jp/english/news/news4/"
-            self.content = f"《{time}》\n{content}\n{url}"
-        self.time = self.timeobj(time)
-
-    def timeobj(self, timestr=""):
-        tmp = datetime.datetime.strptime(timestr, "%Y/%m/%d")
-        return datetime.date(tmp.year, tmp.month, tmp.day)
+# # 工学部英語
 
 
-class EngEN(Site):
-    path = os.path.join("..", os.path.join("sites_db", "eng.pickle"))
-    url = "https://www.eng.tohoku.ac.jp/english/news/news4/"
-    base_url = "https://www.eng.tohoku.ac.jp/english"
-    majors = ["School of Engineering", "Graduate School of Engineering"]
+# class EngENNews(News):
+#     def __init__(self, tag, base_url):
+#         '''
+#         <parameter>
+#         tag (bs4.element.Tag) : single topic object
+#         '''
+#         self.tag = tag
+#         self.base_url = base_url
+#         self.summary()
 
-    def get(self):
-        soup = self.request()
-        # 以降、サイトに合わせて書き直す必要あり
-        info_list = soup.find(class_="table nt news").find_all("tr")
-        print(f"info_list is {info_list}")
-        info_list = self.abstract(info_list)
+#     # this should be overrided
+#     # because the format of news will be different from the others
+#     def summary(self):
+#         time_tag = self.tag.find_next("th")
+#         time_split = time_tag.text.split("/")
+#         print(f"time_split is {time_split}")
 
-        info_list = [EngENNews(info, self.base_url) for info in info_list]
-        return self.dic(info_list)
+#         # time = "{}/{}/{}".format(time_split[0], re.search(
+#         #     r'\d+', (time_split[1])).group())
+#         time = "{}/{}/{}".format(time_split[0], time_split[1], time_split[2])
+#         a_tag = self.tag.find("a")
+#         if a_tag is not None:
+#             href = a_tag.get("href")
+#             if href[0:4] != "http":
+#                 href = self.base_url + href
+#             self.content = f"《{time}》\n{a_tag.text}\n{href}"
+#         else:
+#             content = "\n".join(time_tag.find_next("th").text.split())
+#             url = "https://www.eng.tohoku.ac.jp/english/news/news4/"
+#             self.content = f"《{time}》\n{content}\n{url}"
+#         self.time = self.timeobj(time)
 
-    def abstract(self, tags=[]):
-        result = []
-        exception = []
-        for tag in tags:
-            if tag.text not in exception:
-                result.append(tag)
-                exception.append(tag.text)
-        return result
+#     def timeobj(self, timestr=""):
+#         tmp = datetime.datetime.strptime(timestr, "%Y/%m/%d")
+#         return datetime.date(tmp.year, tmp.month, tmp.day)
+
+
+# class EngEN(Site):
+#     path = os.path.join("..", os.path.join("sites_db", "eng.pickle"))
+#     url = "https://www.eng.tohoku.ac.jp/english/news/news4/"
+#     base_url = "https://www.eng.tohoku.ac.jp/english"
+#     majors = ["School of Engineering", "Graduate School of Engineering"]
+
+#     def get(self):
+#         soup = self.request()
+#         # 以降、サイトに合わせて書き直す必要あり
+#         info_list = soup.find(class_="table nt news").find_all("tr")
+#         print(f"info_list is {info_list}")
+#         info_list = self.abstract(info_list)
+
+#         info_list = [EngENNews(info, self.base_url) for info in info_list]
+#         return self.dic(info_list)
+
+#     def abstract(self, tags=[]):
+#         result = []
+#         exception = []
+#         for tag in tags:
+#             if tag.text not in exception:
+#                 result.append(tag)
+#                 exception.append(tag.text)
+#         return result
 
 
 ### 農学部・農学研究科 ###
