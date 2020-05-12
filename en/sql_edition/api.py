@@ -41,7 +41,12 @@ def request_push():
         data = json.loads(data)
     if data["token"] == TOKEN:
         del data["token"]
-        res = db.register(info=data)
+        try:
+            res = db.register(info=data)
+        except:
+            del db
+            db = DataBase()
+            res = db.register(info=data)
         if res:
             return jsonify({"status":"200"})
         else:

@@ -95,6 +95,11 @@ class Superviser:
         for timer in self._posting:
             schedule.every().day.at(timer).do(self.call)
         schedule.every(20).minutes.do(self.knock)
+        schedule.every(2).hours.do(self.reset)
+
+    def reset(self):
+        del self.db
+        self.db = DataBase()
 
     def update(self):
         for obj in self._targets:
@@ -110,7 +115,11 @@ class Superviser:
                         "target":obj.table,
                         "content":content
                     }
-                    res = self.db.register(info=info, override=override)
+                    try:
+                        res = self.db.register(info=info, override=override)
+                    except:
+                        self.reset()
+                        res = self.db.register(info=info, override=override)
                     if res:
                         print("Completely updated")
                     else:
@@ -252,7 +261,12 @@ class Router:
         return result
 
     def now(self, major):
-        news = self.all_week()
+        try:
+            news = self.all_week()
+        except:
+            del self.db
+            self.db = DataBase()
+            news = self.all_week()
         major = major.split("_")
         if len(major) == 1:
             if major[0] == "TU":
@@ -279,7 +293,12 @@ class Router:
             None
 
     def routing(self):
-        news = self.all_new()
+        try:
+            news = self.all_new()
+        except:
+            del self.db
+            self.db = DataBase()
+            news = self.all_new()
         route = {}
 
         if news["TU"] is not None:

@@ -413,6 +413,9 @@ class MedNews(News):
         elif self.tag.text == "新型コロナウイルス感染症に関する本研究科の対応について-医学系研究科長メッセージ":
             time = "4/10"
             contents = "新型コロナウイルス感染症に関する本研究科の対応について-医学系研究科長メッセージ"
+        elif self.tag.text == "(大学院生）【重要】今学期の授業実施方法及び履修登録期間の延長について":
+            time = "5/1"
+            contents = "(大学院生）【重要】今学期の授業実施方法及び履修登録期間の延長について"
         else:
             time = re.findall(r"\d+/\d+", self.tag.text)[-1]
             contents = self.tag.text[:(-len(time))]
@@ -425,7 +428,6 @@ class MedNews(News):
         year = "2020/"
         tmp = datetime.datetime.strptime(year + timestr, "%Y/%m/%d")
         return datetime.date(tmp.year, tmp.month, tmp.day)
-
 
 class Med(Site):
     url = "https://www.med.tohoku.ac.jp/admissions/2003announce/index.html"
@@ -562,7 +564,6 @@ class EngNews(News):
     def summary(self):
         time_tag = self.tag.find_next("td")
         time_split = time_tag.text.split(".")
-        print(f"time_split is {time_split}")
 
         time = "{}.{}".format(time_split[0], re.search(
             r'\d+', (time_split[1])).group())

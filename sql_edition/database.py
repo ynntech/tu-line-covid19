@@ -125,7 +125,7 @@ class DataBase:
         url = self.major_index[major]
         data = self.get_new(table=major, open_flag=open_flag)
         if data is not None:
-            contents = [f"{major}の新規情報があります。",
+            contents = [f"{major}の新着情報があります。",
                         "公式サイトもご確認ください。", url,
                         "="*15]
             for info in data:

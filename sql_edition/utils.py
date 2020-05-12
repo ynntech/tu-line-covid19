@@ -94,6 +94,12 @@ class Superviser:
         for timer in self._posting:
             schedule.every().day.at(timer).do(self.call)
         schedule.every(20).minutes.do(self.knock)
+        schedule.every(2).hours.do(self.reset)
+
+    def reset(self):
+        self.db.save()
+        self.db.exit()
+        self.db.connect()
 
     def update(self):
         for obj in self._targets:
@@ -109,7 +115,11 @@ class Superviser:
                         "targets":obj.majors,
                         "content":content
                     }
-                    res = self.db.register(info=info, override=override)
+                    try:
+                        res = self.db.register(info=info, override=override)
+                    except:
+                        self.reset()
+                        res = self.db.register(info=info, override=override)
                     if res:
                         print("登録完了")
                     else:
@@ -242,7 +252,12 @@ class Router:
         return data
 
     def routing(self):
-        news = self.get()
+        try:
+            news = self.get()
+        except:
+            del self.db
+            self.db = DataBase()
+            news = self.get()
         route = {}
 
         major_tmp = []
