@@ -134,10 +134,13 @@ class Superviser:
         print("新着情報がないが確認します。")
         route = self.router.routing()
         if len(route) > 0:
+            res = []
             for major, v in route.items():
                 message = "\n&&&\n".join(v)
-                self.push(message=message, major=major)
-            print(f"配信完了 >> {major}")
+                text = self.push(message=message, major=major)
+                res.append(text)
+                print(f"配信完了 >> {major}")
+            requests.post(self.slack_webhook_url, data=json.dumps({'text':"\n".join(res)}))
         else:
             print("登録された情報はありません。")
 
@@ -185,14 +188,12 @@ class Superviser:
         data = {"message":message, "major":major}
         res = requests.post(f"{self.heroku_domain}/push", json=json.dumps(data))
         if res.status_code == 200:
-            text = f"【更新報告】\n対象：{major}\n内容：{message}"
-            requests.post(self.slack_webhook_url, data=json.dumps({'text':text}))
+            text = f"【更新報告】\n対象：{major}"
         elif res.status_code == 503:
-            text = f"【更新報告】\n対象：{major}\n内容：{message}\n*status: 配信完了まで時間かかったぽいやつ*"
-            requests.post(self.slack_webhook_url, data=json.dumps({'text':text}))
+            text = f"【更新報告】\n対象：{major}\n*status: 配信完了まで時間かかったぽいやつ*"
         else:
-            error = f"{major}送信できなかった。。:jobs:＜:ぴえん:"
-            requests.post(self.slack_webhook_url, data=json.dumps({'text':error}))
+            text = f"{major}送信できなかった。。:jobs:＜:ぴえん:"
+        return text
 
     def knock(self):
         print("定期接続確認...")
